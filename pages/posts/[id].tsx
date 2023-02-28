@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+// @ts-ignore
 import MailchimpSubscribe from 'react-mailchimp-subscribe';
 
 import { Main } from './Main';
