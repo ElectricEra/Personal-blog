@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 // @ts-ignore
 import MailchimpSubscribe from 'react-mailchimp-subscribe';
 
-import { Main } from './Main';
+import Main from './Main';
 import { getPostsData } from '../../utils';
 
 import styles from './[id].module.css';

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Main } from './Main';
+import Main from './Main';
 import { getPostsData } from '../../utils';
 
 import styles from './index.module.css';
