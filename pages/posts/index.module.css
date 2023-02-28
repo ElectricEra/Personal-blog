@@ -1,0 +1,28 @@
+.my-articles {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 24px;
+  color: var(--color-black);
+}
+
+.article {
+  border: 1px solid black;
+  padding: 16px;
+  margin: 16px;
+}
+
+.article-title {
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: var(--color-black);
+}
+
+.article-spoiler {
+  margin-bottom: 12px;
+  color: var(--color-black);
+}
+
+.link {
+  color: var(--color-black);
+  text-decoration: none;
+}

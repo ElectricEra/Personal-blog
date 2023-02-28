@@ -1,0 +1,43 @@
+.cover-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background-color: white;
+  padding: 24px;
+}
+
+.header {
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.social-media-links svg + svg {
+  margin-left: 8px;
+}
+
+.article-links {
+  font-size: 18px;
+}
+
+.article-links > a {
+  color: var(--color-black);
+}
+
+.text-wrapper p + p {
+  margin-top: 12px;
+}
+
+.text {
+  color: var(--color-black);
+}

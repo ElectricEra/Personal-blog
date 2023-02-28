@@ -1,0 +1,26 @@
+:root {
+  --color-black: #0c1421;
+  --color-dark-blue: #7286D3;
+  --color-light-blue: #8EA7E9;
+  --color-light-purple: #E5E0FF;
+  --color-light-pink:#FFF2F2;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  max-width: 680px;
+  margin: 0 auto;
+  background-color: var(--color-light-purple);
+  overflow-y: overlay;
+}
+
+.main {
+  background: white;
+  min-height: 100vh;
+  padding: 24px;
+}
