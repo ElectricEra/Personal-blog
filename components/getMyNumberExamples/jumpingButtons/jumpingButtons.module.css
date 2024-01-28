@@ -1,0 +1,12 @@
+.area {
+  border: 1px solid black;
+  height: 300px;
+  width: 300px;
+  position: relative;
+}
+
+.jumping-number {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+}

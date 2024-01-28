@@ -1,7 +1,9 @@
-import Link from 'next/link';
+import PageWrapper from '@/components/PageWrapper/PageWrapper';
+import { BackButton } from '@/components/BackButton/BackButton';
+import { Box } from '@/components/Box/Box';
+import { SectionHeader } from '@/components/SectionHeader/SectionHeader';
 
-import Main from './Main';
-import { getPostsData } from '../../utils';
+import { getPostsData } from '@/utils';
 
 import styles from './index.module.css';
 
@@ -13,22 +15,19 @@ type Post = {
 }
 
 const Post = ({ posts }: { posts: Post[]}) => {
-
   return (
-    <Main>
-      <Link href='/' className={styles['link']}>{'<-'} Повернутись до профілю</Link>
-      <p className={styles['my-articles']}>Мої статті</p>
+    <PageWrapper fullScreen>
+      <BackButton href='/' text={'Назад'} />
+      <SectionHeader text={'Статті'}/>
       {posts.map(post => {
         return (
-        <div key={post.url} className={styles['article']}>
-          <p className={styles['article-title']}>{post.title}</p>
-          <p className={styles['article-spoiler']}>{post.spoiler}</p>
-          <Link href={`/posts/${post.url}`} className={styles['link']}>
-            Читати {'->'}
-          </Link>
-        </div>)
+          <Box key={post.url} linkUrl={`/posts/${post.url}`}>
+            <p className={styles['article-title']}>{post.title}</p>
+            <p className={styles['article-spoiler']}>{post.spoiler}</p>
+          </Box>
+        );
       })}
-    </Main>
+    </PageWrapper>
   )
 }
 

@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 // @ts-ignore
 import MailchimpSubscribe from 'react-mailchimp-subscribe';
 
-import Main from './Main';
-import { getPostsData } from '../../utils';
+import PageWrapper from '@/components/PageWrapper/PageWrapper';
+import { BackButton } from '@/components/BackButton/BackButton';
+import { getPostsData } from '@/utils';
 
 import styles from './[id].module.css';
 
@@ -19,18 +19,20 @@ const Post = ({ post }: { post: { metadata: Post, data: string } }) => {
   const url = "https://gmail.us8.list-manage.com/subscribe/post?u=b784380e684164fe98825bd21&amp;id=14c232fff1&amp;f_id=00ba6be0f0";
 
   return (
-    <Main>
+    <PageWrapper fullScreen>
       <div className={styles['article']}>
-        <Link href='/posts' className={styles['link']}>{'<-'} Назад до статей</Link>
+        <BackButton href='/posts' text={'Назад'} />
         <p className={styles['date']}>{post.metadata.date}</p>
         <ReactMarkdown
           components={{
             h1: ({node, ...props}) => <h1 style={{ color: '#0c1421', paddingTop: '20px', textAlign: 'center' }} {...props} />,
-            h2: ({node, ...props}) => <h2 style={{ color: '#0c1421', paddingTop: '20px' }} {...props} />,
+            h2: ({node, ...props}) => <h2 style={{ color: '#0c1421', paddingTop: '32px' }} {...props} />,
             h3: ({node, ...props}) => <h3 style={{ color: '#0c1421', paddingTop: '20px' }} {...props} />,
-            ul: ({node, ...props}) => <ul style={{ color: '#0c1421', textAlign: 'justify', marginLeft: '40px', marginTop: '12px' }} {...props} />,
-            ol: ({node, ...props}) => <ol style={{ color: '#0c1421', textAlign: 'justify', marginLeft: '40px', marginTop: '12px' }} {...props} />,
-            p: ({node, ...props}) => <p style={{ color: '#0c1421', textAlign: 'justify', marginTop: '16px' }} {...props} />,
+            p: ({node, ...props}) => <p style={{ color: '#0c1421', textAlign: 'justify', marginTop: '32px', lineHeight: '28px', tabSize: '10px' }} {...props} />,
+            ul: ({node, ...props}) => <ul style={{ color: '#0c1421', textAlign: 'justify', marginLeft: '32px', marginTop: '12px' }} {...props} />,
+            ol: ({node, ...props}) => <ol style={{ color: '#0c1421', textAlign: 'justify', marginLeft: '32px', marginTop: '12px' }} {...props} />,
+            li: ({node, ...props}) => <li style={{ color: '#0c1421', textAlign: 'justify', marginTop: '8px', lineHeight: '28px', }} {...props} />,
+            hr: ({node, ...props}) => <hr style={{ color: '#0c1421', marginTop: '24px' }} {...props} />,
           }}
         >
           {post.data}
@@ -41,7 +43,7 @@ const Post = ({ post }: { post: { metadata: Post, data: string } }) => {
           <MailchimpSubscribe url={url}/>
         </div>
       </div>
-    </Main>
+    </PageWrapper>
   )
 }
 

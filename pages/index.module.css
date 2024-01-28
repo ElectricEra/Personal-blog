@@ -1,19 +1,9 @@
-.cover-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
 .cover {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  background-color: white;
-  padding: 24px;
+  gap: 24px;
 }
 
 .header {
@@ -32,12 +22,14 @@
 
 .article-links > a {
   color: var(--color-black);
-}
-
-.text-wrapper p + p {
-  margin-top: 12px;
+  text-decoration: none;
 }
 
 .text {
   color: var(--color-black);
+  text-align: center;
+}
+
+.image-wrapper > img {
+  border-radius: 8px;
 }

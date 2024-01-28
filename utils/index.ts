@@ -9,16 +9,16 @@ type Post = {
 }
 
 export const getPostsData = async () => {
-  const getDirFolders = await fsPromises.readdir(path.join(process.cwd(), './blogPosts'));
+  const getDirFolders = await fsPromises.readdir(path.join(process.cwd(), './data/posts'));
   const dirPosts = getDirFolders.map(async (folder) => {
-    const filePath = path.join(process.cwd(), `./blogPosts/${folder}/markdown.md`);
+    const filePath = path.join(process.cwd(), `./data/posts/${folder}/markdown.md`);
 
     return fsPromises.readFile(filePath, 'utf-8');
   });
 
   const posts = await Promise.all(dirPosts);
   const postsData = posts.map(post => {
-    const markdownMetadata = post.split('---')[1];
+    const [_first, markdownMetadata, ...rest] = post.split('---');
 
     console.log('--->', markdownMetadata,'--\n--' , markdownMetadata.trim(), '---<');
     const parsedMetadata = markdownMetadata
@@ -31,7 +31,7 @@ export const getPostsData = async () => {
         return { ...acc, [key]: value.trim() };
       }, {});
 
-    return { metadata: parsedMetadata as Post, data: post.split('---')[2] };
+    return { metadata: parsedMetadata as Post, data: rest.join('---') };
   });
 
   return postsData;

@@ -4,6 +4,11 @@
   --color-light-blue: #8EA7E9;
   --color-light-purple: #E5E0FF;
   --color-light-pink:#FFF2F2;
+  --color-dark-grey-blue: #212229;
+  /* --color-dark-blue: #2f5278; */
+  --color-dark-blue: #3052A0;
+
+  --my: #3052A0;
 }
 
 * {
@@ -12,11 +17,16 @@
   padding: 0;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
   max-width: 680px;
   margin: 0 auto;
-  background-color: var(--color-light-purple);
+  background-color: var(--color-dark-blue);
   overflow-y: overlay;
+  padding: 0 15px;
 }
 
 .main {

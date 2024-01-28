@@ -1,0 +1,33 @@
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+@media screen and (max-width: 768px) {
+  .page-wrapper {
+    margin: auto 0;
+  }
+}
+
+.page {
+  width: 100%;
+  padding: 24px;
+  background: white;
+  box-shadow: 0 0 10px 1px black;
+  border-radius: 10px;
+  /* text-align: center; */
+}
+
+@media screen and (max-width: 768px) {
+  .page {
+    border-radius: 0;
+  }
+}
+
+.page-full-screen {
+  min-height: calc(100vh - 40px);
+  margin: 20px;
+}
