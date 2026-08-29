@@ -7,7 +7,7 @@ import { SectionHeader } from '@/components/SectionHeader/SectionHeader';
 
 import styles from './index.module.css';
 
-import { Card } from './getmynumber/card';
+import { Card } from '@/components/projects/getmynumber/card';
 
 const Projects = () => {
 
