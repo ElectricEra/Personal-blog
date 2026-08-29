@@ -7,15 +7,15 @@ import { SectionHeader } from '@/components/SectionHeader/SectionHeader';
 
 import styles from './index.module.css';
 
+import { Card } from './getmynumber/card';
+
 const Projects = () => {
 
   return (
     <PageWrapper fullScreen>
       <BackButton href='/' text={'Назад'} />
       <SectionHeader text={'Проекти'}/>
-      <Box linkUrl={'/projects/getmynumber'}>
-        <p>Я вирішив і собі зробити невеличеий челендж і поекспериментувати. До вашої уваги... НАЙГІРШІ ІНПУТИ</p>
-      </Box>
+      <Card />
     </PageWrapper>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 import PageWrapper from '@/components/PageWrapper/PageWrapper';
@@ -10,13 +10,17 @@ import styles from './index.module.css';
 
 const minigameOptions = [JumpingButtons, InfiniteSelect];
 
-const GetMyNumber = () => {
-  const [number, setNumber] = useState('');
-  const [selectedGame, setSelectedGame] = useState(minigameOptions[0].name);
+const generatePhone = () => {
+  const phone = [];
+  for (let i = 0; i < 10; i++) {
+    phone.push(Math.floor(Math.random() * 10));
+  }
+  return phone.join('');
+};
 
-  useEffect(() => {
-    setNumber(generatePhone());
-  }, []);
+const GetMyNumber = () => {
+  const [number, setNumber] = useState(generatePhone);
+  const [selectedGame, setSelectedGame] = useState(minigameOptions[0].name);
 
   const phoneCheck = (number: string, value: string) => {
     if (number === value) {
@@ -24,14 +28,6 @@ const GetMyNumber = () => {
     } else {
       alert('Oops!');
     }
-  }
-
-  const generatePhone = () => {
-    const phone = [];
-    for (let i = 0; i < 10; i++) {
-      phone.push(Math.floor(Math.random() * 10));
-    }
-    return phone.join('');
   }
 
   const Minigame = minigameOptions.find(game => game.name === selectedGame) as typeof minigameOptions[0];
