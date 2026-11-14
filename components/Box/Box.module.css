@@ -1,4 +1,5 @@
 .link {
+  display: block;
   color: var(--color-black);
   text-decoration: none;
 }
@@ -8,4 +9,21 @@
   padding: 16px;
   margin: 16px;
   background: white;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.link:hover .box {
+  background: var(--color-light-pink);
+  border-color: var(--color-dark-blue);
+}
+
+.title {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-black);
+}
+
+.description {
+  color: var(--color-black);
 }

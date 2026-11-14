@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Formula Maze</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#eaf1ff;background:#0b1221;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px 14px}main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:clamp(28px,5vw,42px)}.sub{color:#a7b5ce;margin:8px 0 22px}.panel{background:#151f32;border:1px solid #33415b;border-radius:18px;padding:20px;box-shadow:0 15px 45px #0003}.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}button,select{font:inherit;color:inherit}button{background:#365ef3;border:1px solid #5a79fd;padding:11px 15px;border-radius:11px;font-weight:650;cursor:pointer}button.secondary{background:#26334b;border-color:#485773}button:disabled{opacity:.45;cursor:not-allowed}select{background:#26334b;border:1px solid #485773;padding:10px;border-radius:9px}.pill{display:inline-block;padding:8px 12px;background:#293650;border-radius:99px;color:#d0defa;font-variant-numeric:tabular-nums}.status{font-weight:700;font-size:19px;min-height:29px}.detail{color:#adbed7;line-height:1.5;min-height:44px;margin:9px 0 18px}.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:490px;margin:0 auto 20px}.cell{aspect-ratio:1;background:#23314b;border:2px solid #425577;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:clamp(28px,6vw,40px);font-weight:800;position:relative;user-select:none;transition:background .12s,transform .12s}.cell.interactive{cursor:pointer}.cell.interactive:hover{background:#304563}.cell.start{border-color:#4cc9a1}.cell.end{border-color:#f7ba58}.cell.selected{background:#2b6e94;border-color:#76d7f7}.cell.selected:after{content:attr(data-step);position:absolute;right:7px;top:5px;font-size:12px;color:white}.cell:disabled{cursor:default}.results{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 16px}.total{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}.path{color:#9db3da;overflow-wrap:anywhere}.feedback{min-height:27px;font-weight:700}.good{color:#5fe2b4}.bad{color:#ffb1aa}.hint{font-size:13px;color:#9aaac4;margin:12px 0 0} .hidden{display:none!important}@media(max-width:500px){.panel{padding:14px}.board{gap:7px}.cell{border-radius:10px}}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><h1>Formula Maze</h1><span class="pill" id="score">Solved: 0</span></div>
+ <p class="sub">Memorize 16 numbers. Then draw a path across the letter board to hit the target sum.</p>
+ <section class="panel">
+  <div class="controls">
+   <label for="seconds">Memorize for </label><select id="seconds"><option value="60">60 seconds</option><option value="30">30 seconds</option><option value="15">15 seconds</option><option value="0">Skip memorizing timer</option></select>
+   <button id="newGame">New board</button><button id="skip" class="secondary" disabled>Flip board now</button>
+   <span class="pill" id="timer" aria-live="polite">Ready</span>
+  </div>
+  <div class="status" id="status">Ready to play?</div>
+  <p class="detail" id="detail">Press “New board” to view the numbers. You'll get a target after the board flips.</p>
+  <div class="board" id="board" aria-label="4 by 4 game board"></div>
+  <div id="playControls" class="hidden">
+   <div class="results"><span class="total" id="total">Total: 0</span><span class="path" id="path">Path: —</span></div>
+   <div class="controls"><button id="check">Check path</button><button class="secondary" id="undo">Undo</button><button class="secondary" id="clear">Clear path</button><button class="secondary" id="reveal">Reveal numbers</button></div>
+   <div class="feedback" id="feedback" aria-live="polite"></div>
+  </div>
+  <p class="hint">Only up, down, left, or right. Each cell can be used once. Both endpoints count toward the sum. Click your last cell to undo it.</p>
+ </section>
+</main>
+<script>
+(() => {
+ 'use strict';
+ const letters = [...'ABCDEFGHIJKLMNOP'];
+ const $ = id => document.getElementById(id);
+ const els = Object.fromEntries(['board','seconds','newGame','skip','timer','score','status','detail','playControls','total','path','check','undo','clear','reveal','feedback'].map(id=>[id,$(id)]));
+ let numbers=[], solution=[], path=[], phase='idle', deadline=0, ticker=null, solved=0, revealed=false, checked=false;
+ const neighbors = (i) => [i-4,i+4, ...(i%4 ? [i-1] : []), ...(i%4!==3 ? [i+1] : [])].filter(n=>n>=0&&n<16);
+ const shuffle = a => {for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+ const sumPath = seq=>seq.reduce((s,i)=>s+numbers[i],0);
+ function generatePath(){
+   // Choose a valid start/end pair with Manhattan distance 4 or 5,
+   // ensuring the shortest route contains exactly 5 or 6 cells.
+   const distance=(a,b)=>Math.abs(Math.floor(a/4)-Math.floor(b/4))+Math.abs(a%4-b%4);
+   const desiredDistance=4+Math.floor(Math.random()*2);
+   const pairs=[];
+   for(let start=0;start<16;start++){
+     for(let end=0;end<16;end++){
+       if(distance(start,end)===desiredDistance)pairs.push([start,end]);
+     }
+   }
+   const [start,end]=pairs[Math.floor(Math.random()*pairs.length)];
+   const route=[start];
+   while(route[route.length-1]!==end){
+     const current=route[route.length-1];
+     const options=neighbors(current).filter(i=>distance(i,end)===distance(current,end)-1);
+     route.push(options[Math.floor(Math.random()*options.length)]);
+   }
+   return route;
+ }
+ function render(){
+   els.board.replaceChildren();
+   const showNumbers=phase==='memorize'||revealed;
+   for(let i=0;i<16;i++){
+     const b=document.createElement('button');b.type='button';b.className='cell';b.textContent=showNumbers?numbers[i]:letters[i];
+     if(phase==='play'&&!revealed){b.classList.add('interactive');b.setAttribute('aria-label',`Cell ${letters[i]}`);b.addEventListener('click',()=>choose(i));}
+     else b.disabled=true;
+     if(phase==='play'){
+       if(i===solution[0])b.classList.add('start');
+       if(i===solution.at(-1))b.classList.add('end');
+       const order=path.indexOf(i);if(order>=0){b.classList.add('selected');b.dataset.step=order+1}
+     }
+     els.board.append(b);
+   }
+   els.playControls.classList.toggle('hidden',phase!=='play');
+   if(phase==='play'){
+     els.total.textContent=checked?`Total: ${sumPath(path)} / ${sumPath(solution)}`:'Total: —';
+     els.path.textContent=`Path: ${path.map(i=>letters[i]).join(' → ')||'—'}`;
+     els.check.disabled=revealed;
+     els.undo.disabled=path.length===0||revealed;
+     els.clear.disabled=path.length===0||revealed;
+     els.reveal.textContent=revealed?'Hide numbers':'Reveal numbers';
+   }
+ }
+ function start(){
+   clearInterval(ticker); numbers=shuffle(Array.from({length:20},(_,i)=>i+1)).slice(0,16);solution=generatePath();path=[];revealed=false;checked=false;phase='memorize';
+   const seconds=Number(els.seconds.value);deadline=Date.now()+seconds*1000;
+   els.status.textContent='Memorize the numbers!';els.detail.textContent='Remember which number belongs to each position. The board will flip to letters.';
+   els.skip.disabled=false;els.feedback.textContent='';render();
+   if(seconds===0){flip();return}
+   const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));els.timer.textContent=`${left}s remaining`;if(left===0)flip()};tick();ticker=setInterval(tick,150);
+ }
+ function flip(){if(phase!=='memorize')return;clearInterval(ticker);phase='play';els.skip.disabled=true;els.timer.textContent='Board hidden';
+   els.status.textContent=`${letters[solution[0]]} → ${letters[solution.at(-1)]} = ${sumPath(solution)}`;
+   els.detail.textContent=`Start on ${letters[solution[0]]} (green border), finish on ${letters[solution.at(-1)]} (gold border). Build a path whose numbers add up to ${sumPath(solution)}.`;
+   render();
+ }
+ function choose(i){if(phase!=='play'||revealed)return;
+   if(path.length && i===path.at(-1)){path.pop();checked=false;els.feedback.textContent='';render();return}
+   if(!path.length){if(i!==solution[0]){message(`Start at ${letters[solution[0]]}.`,false);return}path=[i]}
+   else if(path.includes(i)){message('A cell cannot be visited twice.',false);return}
+   else if(!neighbors(path.at(-1)).includes(i)){message('Move only to an adjacent cell.',false);return}
+   else if(path.at(-1)===solution.at(-1)){message('The endpoint must be your final cell. Undo to change your route.',false);return}
+   else path.push(i);
+   checked=false;els.feedback.textContent='';render();
+ }
+ function message(msg,good){els.feedback.textContent=msg;els.feedback.className='feedback '+(good?'good':'bad')}
+ function check(){checked=true;render();if(!path.length||path[0]!==solution[0]){message('Start at the marked starting letter.',false);return}
+   if(path.at(-1)!==solution.at(-1)){message('Your route must end at the marked finishing letter.',false);return}
+   if(sumPath(path)!==sumPath(solution)){message('Not quite! Try adjusting your route.',false);return}
+   if(!revealed){solved++;els.score.textContent=`Solved: ${solved}`}
+   revealed=true;message('Correct! You solved it. Press “New board” for another round.',true);render();
+ }
+ els.newGame.addEventListener('click',start);els.skip.addEventListener('click',flip);
+ els.check.addEventListener('click',check);els.undo.addEventListener('click',()=>{if(path.length&&!revealed){path.pop();checked=false;els.feedback.textContent='';render()}});
+ els.clear.addEventListener('click',()=>{if(!revealed){path=[];checked=false;els.feedback.textContent='';render()}});
+ els.reveal.addEventListener('click',()=>{revealed=!revealed;render();message(revealed?'Numbers revealed. This round no longer counts toward your score.':'Numbers hidden again.',false)});
+ // Initial empty board
+ for(const letter of letters){const b=document.createElement('button');b.className='cell';b.textContent=letter;b.disabled=true;els.board.append(b)}
+})();
+</script>
+</body>
+</html>

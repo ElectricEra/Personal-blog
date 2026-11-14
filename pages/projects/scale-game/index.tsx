@@ -1,0 +1,896 @@
+import { useState } from "react";
+
+import { BackButton } from "@/components/BackButton/BackButton";
+import { Button } from "@/components/Button/Button";
+import PageWrapper from "@/components/PageWrapper/PageWrapper";
+import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
+import { Stack } from "@/components/Stack/Stack";
+import { Text } from "@/components/Text/Text";
+import { useTranslation } from "@/utils/i18n";
+
+import {
+  addBoards,
+  type Board,
+  blockCount,
+  boardFromPlacements,
+  type Challenge,
+  COLORS,
+  type Color,
+  canCommit,
+  copiesLeft,
+  countPlacements,
+  createChallenge,
+  DIFFICULTIES,
+  DIFFICULTY_IDS,
+  type Difficulty,
+  emptyBoard,
+  guessIsCorrect,
+  type HistoryEntry,
+  mainIsSolved,
+  type Pan,
+  type Placement,
+  parseGuess,
+  type ReportedOutcome,
+  type RoundResult,
+  reportOutcome,
+  resultAfterGuess,
+  resultIfStuck,
+  type ScaleId,
+  type ScaleState,
+  type Side,
+  samePattern,
+  unusedBlocks,
+  withoutLastPlacement,
+} from "./game";
+import styles from "./index.module.css";
+import { type GameTranslation, translations } from "./translations";
+
+type Phase = "idle" | RoundResult;
+
+type Feedback = {
+  text: string;
+  good: boolean;
+};
+
+const emptyGuess = (): Record<Color, string> => ({
+  red: "",
+  yellow: "",
+  green: "",
+  blue: "",
+  purple: "",
+});
+
+const guessFromChallenge = (challenge: Challenge): Record<Color, string> => {
+  const next = emptyGuess();
+  for (const color of challenge.revealed) {
+    next[color] = String(challenge.weights[color]);
+  }
+  return next;
+};
+
+const isDifficulty = (value: string): value is Difficulty =>
+  DIFFICULTY_IDS.some((difficulty) => difficulty === value);
+
+const MIDDLE_SLOT = 2;
+const SLOT_KEYS = ["heaviest", "heavy", "middle", "light", "lightest"] as const;
+
+const orderFromChallenge = (challenge: Challenge): Color[] => {
+  if (!DIFFICULTIES[challenge.difficulty].medianReveal) {
+    return [...COLORS];
+  }
+  const middle = challenge.revealed[0];
+  const rest = COLORS.filter((color) => color !== middle);
+  const [first, second, fourth, fifth] = rest;
+  if (!middle || !first || !second || !fourth || !fifth) {
+    return [...COLORS];
+  }
+  return [first, second, middle, fourth, fifth];
+};
+
+const slotIsFixed = (challenge: Challenge, index: number) =>
+  DIFFICULTIES[challenge.difficulty].medianReveal && index === MIDDLE_SLOT;
+
+const colorClassName = (color: Color) => {
+  if (color === "red") {
+    return styles.red;
+  }
+  if (color === "yellow") {
+    return styles.yellow;
+  }
+  if (color === "green") {
+    return styles.green;
+  }
+  if (color === "blue") {
+    return styles.blue;
+  }
+  return styles.purple;
+};
+
+const tiltClassName = (outcome: ReportedOutcome) => {
+  if (outcome === "left") {
+    return styles.tiltLeft;
+  }
+  if (outcome === "right") {
+    return styles.tiltRight;
+  }
+  return styles.tiltLevel;
+};
+
+const statusMessage = (
+  copy: GameTranslation,
+  phase: Phase,
+  solved: boolean,
+  partialCounts: boolean,
+) => {
+  if (phase === "idle") {
+    return copy.statusIdle;
+  }
+  if (phase === "full") {
+    return copy.statusFull;
+  }
+  if (phase === "partial") {
+    return copy.statusPartial;
+  }
+  if (phase === "failure") {
+    return copy.statusFailure;
+  }
+  if (solved) {
+    return partialCounts ? copy.statusSolvedPartial : copy.statusSolved;
+  }
+  return copy.statusPlaying;
+};
+
+const describeAdded = (
+  placements: readonly Placement[],
+  scale: ScaleId,
+  copy: GameTranslation,
+) => {
+  const parts: string[] = [];
+  for (const side of ["left", "right"] as const) {
+    const sideName = side === "left" ? copy.leftPan : copy.rightPan;
+    for (const color of COLORS) {
+      let count = 0;
+      for (const placement of placements) {
+        if (
+          placement.scale === scale &&
+          placement.side === side &&
+          placement.color === color
+        ) {
+          count += 1;
+        }
+      }
+      if (count > 0) {
+        parts.push(copy.piece(copy.colors[color], count, sideName));
+      }
+    }
+  }
+  return parts.length > 0 ? parts.join(", ") : copy.unchanged;
+};
+
+const tokensFor = (committed: Pan, pending: Pan) => {
+  const tokens: Array<{ color: Color; pending: boolean; index: number }> = [];
+  for (const color of COLORS) {
+    for (let index = 0; index < committed[color]; index += 1) {
+      tokens.push({ color, pending: false, index });
+    }
+    for (let index = 0; index < pending[color]; index += 1) {
+      tokens.push({ color, pending: true, index });
+    }
+  }
+  return tokens;
+};
+
+const combinedPan = (committed: Pan, pending: Pan): Pan => {
+  const totals: Pan = {
+    red: 0,
+    yellow: 0,
+    green: 0,
+    blue: 0,
+    purple: 0,
+  };
+  for (const color of COLORS) {
+    totals[color] = committed[color] + pending[color];
+  }
+  return totals;
+};
+
+const pairOverlap = (left: Pan, right: Pan): Pan => {
+  const overlap: Pan = {
+    red: 0,
+    yellow: 0,
+    green: 0,
+    blue: 0,
+    purple: 0,
+  };
+  for (const color of COLORS) {
+    overlap[color] = Math.min(left[color], right[color]);
+  }
+  return overlap;
+};
+
+type ScaleCardProps = {
+  title: string;
+  scaleId: ScaleId;
+  committed: ScaleState;
+  pending: readonly Placement[];
+  outcome: ReportedOutcome;
+  selectedSide: Side | null;
+  interactive: boolean;
+  ghostPairs: boolean;
+  copy: GameTranslation;
+  onSelect: (side: Side) => void;
+  onRemove: (side: Side, color: Color) => void;
+};
+
+const ScaleCard = ({
+  title,
+  scaleId,
+  committed,
+  pending,
+  outcome,
+  selectedSide,
+  interactive,
+  ghostPairs,
+  copy,
+  onSelect,
+  onRemove,
+}: ScaleCardProps) => {
+  const pans: Array<{ side: Side; label: string }> = [
+    { side: "left", label: copy.leftPan },
+    { side: "right", label: copy.rightPan },
+  ];
+  const leftPending = countPlacements(pending, scaleId, "left");
+  const rightPending = countPlacements(pending, scaleId, "right");
+  const overlap = pairOverlap(
+    combinedPan(committed.left, leftPending),
+    combinedPan(committed.right, rightPending),
+  );
+
+  return (
+    <section className={styles.scaleCard} aria-label={title}>
+      <h2 className={styles.heading}>{title}</h2>
+      <p className={styles.outcome} aria-live="polite">
+        {copy.outcomes[outcome]}
+      </p>
+      <div className={styles.stage}>
+        <div className={`${styles.beam} ${tiltClassName(outcome)}`} />
+        <div className={styles.base} />
+      </div>
+      <div className={styles.pans}>
+        {pans.map(({ side, label }) => {
+          const selected = selectedSide === side;
+          const tokens = tokensFor(
+            committed[side],
+            countPlacements(pending, scaleId, side),
+          );
+          const seen: Pan = {
+            red: 0,
+            yellow: 0,
+            green: 0,
+            blue: 0,
+            purple: 0,
+          };
+          return (
+            <div key={side} className={styles.panColumn}>
+              <button
+                type="button"
+                className={`${styles.sideButton} ${selected ? styles.sideSelected : ""}`}
+                aria-pressed={selected}
+                disabled={!interactive}
+                onClick={() => onSelect(side)}
+              >
+                {label}
+              </button>
+              <div
+                className={`${styles.pan} ${selected ? styles.panSelected : ""}`}
+              >
+                {tokens.map((token) => {
+                  const order = seen[token.color];
+                  seen[token.color] += 1;
+                  const ghost = ghostPairs && order < overlap[token.color];
+                  const ghostLabel = ghost ? `, ${copy.ghostedBlock}` : "";
+                  return token.pending ? (
+                    <button
+                      key={`${token.color}-pending-${token.index}`}
+                      type="button"
+                      className={`${styles.token} ${colorClassName(token.color)} ${styles.pendingToken} ${ghost ? styles.ghostToken : ""}`}
+                      aria-label={`${copy.removePending(copy.colors[token.color])}${ghostLabel}`}
+                      disabled={!interactive}
+                      onClick={() => onRemove(side, token.color)}
+                    >
+                      {copy.short[token.color]}
+                    </button>
+                  ) : (
+                    <span
+                      key={`${token.color}-set-${token.index}`}
+                      className={`${styles.token} ${colorClassName(token.color)} ${ghost ? styles.ghostToken : ""}`}
+                    >
+                      <span aria-hidden="true">{copy.short[token.color]}</span>
+                      <span className={styles.srOnly}>
+                        {copy.colors[token.color]}
+                        {ghostLabel}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+type OrderBoardProps = {
+  challenge: Challenge;
+  order: Color[];
+  remaining: Pan;
+  picked: Color | null;
+  guess: Record<Color, string>;
+  interactive: boolean;
+  copy: GameTranslation;
+  onPick: (color: Color) => void;
+  onWeight: (color: Color, value: string) => void;
+};
+
+const OrderBoard = ({
+  challenge,
+  order,
+  remaining,
+  picked,
+  guess,
+  interactive,
+  copy,
+  onPick,
+  onWeight,
+}: OrderBoardProps) => {
+  const weightControl = (color: Color) => {
+    if (challenge.revealed.includes(color)) {
+      return (
+        <span className={styles.knownGrams}>
+          {copy.knownWeight(challenge.weights[color])}
+        </span>
+      );
+    }
+    return (
+      <input
+        className={styles.draft}
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={copy.draftWeight(copy.colors[color])}
+        value={guess[color]}
+        disabled={!interactive}
+        onChange={(event) =>
+          onWeight(color, event.target.value.replace(/\D/g, ""))
+        }
+      />
+    );
+  };
+
+  return (
+    <section className={styles.order} aria-label={copy.orderTitle}>
+      <h2 className={styles.heading}>{copy.orderTitle}</h2>
+      <Text>{copy.orderHint}</Text>
+      <div className={styles.chain}>
+        {SLOT_KEYS.map((slotKey) => {
+          const index = SLOT_KEYS.indexOf(slotKey);
+          const color = order[index];
+          if (!color) {
+            return null;
+          }
+          const fixed = slotIsFixed(challenge, index);
+          return (
+            <div key={slotKey} className={styles.chainItem}>
+              <div
+                className={`${styles.slot} ${fixed ? styles.slotFixed : ""} ${picked && !fixed ? styles.slotReady : ""}`}
+              >
+                {fixed ? (
+                  <span
+                    className={`${styles.orderChip} ${colorClassName(color)}`}
+                  >
+                    {copy.short[color]} {copy.colors[color]}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className={`${styles.orderChip} ${colorClassName(color)} ${picked === color ? styles.orderChipSelected : ""}`}
+                    aria-pressed={picked === color}
+                    aria-label={copy.orderPick(copy.colors[color])}
+                    disabled={!interactive}
+                    onClick={() => onPick(color)}
+                  >
+                    {copy.short[color]} {copy.colors[color]}
+                  </button>
+                )}
+                {weightControl(color)}
+                <input
+                  className={`${styles.draft} ${styles.quantity}`}
+                  readOnly
+                  tabIndex={-1}
+                  aria-label={copy.orderQuantity(copy.colors[color])}
+                  value={remaining[color]}
+                />
+                {fixed ? (
+                  <span className={styles.srOnly}>{copy.orderMiddle}</span>
+                ) : null}
+              </div>
+              {index < SLOT_KEYS.length - 1 ? (
+                <span className={styles.relation} aria-hidden="true">
+                  &gt;
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+const ScaleGame = () => {
+  const copy = useTranslation(translations);
+  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [board, setBoard] = useState<Board>(emptyBoard());
+  const [pending, setPending] = useState<Placement[]>([]);
+  const [selected, setSelected] = useState<{ scale: ScaleId; side: Side }>({
+    scale: "main",
+    side: "left",
+  });
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [notes, setNotes] = useState("");
+  const [guessesLeft, setGuessesLeft] = useState(0);
+  const [guess, setGuess] = useState(emptyGuess());
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [ghostPairs, setGhostPairs] = useState(false);
+  const [order, setOrder] = useState<Color[]>([...COLORS]);
+  const [picked, setPicked] = useState<Color | null>(null);
+
+  const config = challenge
+    ? DIFFICULTIES[challenge.difficulty]
+    : DIFFICULTIES[difficulty];
+  const solved = challenge
+    ? mainIsSolved(board.main, challenge.weights)
+    : false;
+  const interactive = phase === "playing";
+  const remaining = copiesLeft(config.copies, board, pending);
+
+  const startGame = () => {
+    const next = createChallenge(difficulty);
+    const nextConfig = DIFFICULTIES[difficulty];
+    setChallenge(next);
+    setBoard(emptyBoard());
+    setPending([]);
+    setSelected({ scale: "main", side: "left" });
+    setHistory([]);
+    setNotes("");
+    setGuessesLeft(nextConfig.guesses);
+    setGuess(guessFromChallenge(next));
+    setOrder(orderFromChallenge(next));
+    setPicked(null);
+    setPhase("playing");
+    setFeedback(null);
+  };
+
+  const fixedColor =
+    challenge && config.medianReveal ? (challenge.revealed[0] ?? null) : null;
+
+  const swapColors = (source: Color, target: Color) => {
+    if (
+      !interactive ||
+      !challenge ||
+      source === target ||
+      source === fixedColor ||
+      target === fixedColor
+    ) {
+      return;
+    }
+    setOrder((current) => {
+      const next = [...current];
+      const fromIndex = next.indexOf(source);
+      const toIndex = next.indexOf(target);
+      const from = next[fromIndex];
+      const to = next[toIndex];
+      if (fromIndex < 0 || toIndex < 0 || !from || !to) {
+        return current;
+      }
+      next[fromIndex] = to;
+      next[toIndex] = from;
+      return next;
+    });
+    setPicked(null);
+  };
+
+  const pickColor = (color: Color) => {
+    if (!interactive || !challenge || color === fixedColor) {
+      return;
+    }
+    if (!picked || picked === color) {
+      setPicked((current) => (current === color ? null : color));
+      return;
+    }
+    swapColors(picked, color);
+  };
+
+  const place = (color: Color) => {
+    if (!interactive) {
+      return;
+    }
+    if (remaining[color] <= 0) {
+      setFeedback({ text: copy.noBlocks, good: false });
+      return;
+    }
+    setPending((current) => [
+      ...current,
+      { scale: selected.scale, side: selected.side, color },
+    ]);
+    setFeedback(null);
+  };
+
+  const undo = () => {
+    if (!interactive || pending.length === 0) {
+      return;
+    }
+    setPending((current) => withoutLastPlacement(current));
+    setFeedback(null);
+  };
+
+  const clearPending = () => {
+    setPending([]);
+    setFeedback(null);
+  };
+
+  const removePending = (scale: ScaleId, side: Side, color: Color) => {
+    if (!interactive) {
+      return;
+    }
+    setPending((current) =>
+      withoutLastPlacement(current, { scale, side, color }),
+    );
+  };
+
+  const commitMove = () => {
+    if (!challenge || !interactive) {
+      return;
+    }
+    if (!canCommit(pending.length, config.minPlace)) {
+      setFeedback({ text: copy.needMore(config.minPlace), good: false });
+      return;
+    }
+    const nextBoard = addBoards(board, boardFromPlacements(pending));
+    const solvedNext = mainIsSolved(nextBoard.main, challenge.weights);
+    const canMove = unusedBlocks(config.copies, nextBoard) >= config.minPlace;
+    const nextPhase = resultIfStuck(
+      solvedNext,
+      canMove,
+      guessesLeft,
+      config.partialCounts,
+    );
+    setBoard(nextBoard);
+    setHistory((current) => [
+      ...current,
+      {
+        id: current.length + 1,
+        added: [...pending],
+        main: reportOutcome(nextBoard.main, challenge.weights),
+        secondary: reportOutcome(nextBoard.secondary, challenge.weights),
+      },
+    ]);
+    setPending([]);
+    if (nextPhase !== "playing") {
+      setPhase(nextPhase);
+      setFeedback(null);
+      return;
+    }
+    if (solvedNext) {
+      setFeedback({
+        text: config.partialCounts
+          ? copy.statusSolvedPartial
+          : copy.statusSolved,
+        good: true,
+      });
+      return;
+    }
+    if (
+      blockCount(nextBoard.main.left) > 0 &&
+      blockCount(nextBoard.main.right) > 0 &&
+      samePattern(nextBoard.main.left, nextBoard.main.right)
+    ) {
+      setFeedback({ text: copy.samePattern, good: false });
+      return;
+    }
+    setFeedback(null);
+  };
+
+  const submitGuess = () => {
+    if (!challenge || !interactive || !solved) {
+      return;
+    }
+    const parsed = parseGuess(guess, config.minWeight, config.maxWeight);
+    if (!parsed) {
+      setFeedback({
+        text: copy.invalidGuess(config.minWeight, config.maxWeight),
+        good: false,
+      });
+      return;
+    }
+    const correct = guessIsCorrect(challenge.weights, parsed);
+    const left = guessesLeft - 1;
+    const nextPhase = resultAfterGuess(correct, left, config.partialCounts);
+    setGuessesLeft(left);
+    if (nextPhase === "playing") {
+      setFeedback({ text: copy.wrongGuess, good: false });
+      return;
+    }
+    setPending([]);
+    setPhase(nextPhase);
+    setFeedback(null);
+  };
+
+  const finishPartial = () => {
+    if (!challenge || !interactive || !solved || !config.partialCounts) {
+      return;
+    }
+    setPending([]);
+    setPhase("partial");
+    setFeedback(null);
+  };
+
+  return (
+    <PageWrapper fullScreen>
+      <BackButton href="/projects" text={copy.back} />
+      <SectionHeader>{copy.title}</SectionHeader>
+      <Text className={styles.intro} align="center">
+        {copy.intro}
+      </Text>
+      <Stack className={styles.game} gap={14}>
+        <div className={styles.controls}>
+          <label className={styles.label} htmlFor="scale-difficulty">
+            {copy.difficultyLabel}
+          </label>
+          <select
+            id="scale-difficulty"
+            className={styles.select}
+            value={difficulty}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (isDifficulty(value)) {
+                setDifficulty(value);
+              }
+            }}
+          >
+            {DIFFICULTY_IDS.map((id) => (
+              <option key={id} value={id}>
+                {copy.difficulties[id]}
+              </option>
+            ))}
+          </select>
+          <Button onClick={startGame}>{copy.newGame}</Button>
+          {challenge ? (
+            <span className={styles.pill}>
+              {copy.thisPuzzle(copy.difficulties[challenge.difficulty])}
+            </span>
+          ) : null}
+        </div>
+        <p className={styles.status} aria-live="polite">
+          {statusMessage(copy, phase, solved, config.partialCounts)}
+        </p>
+        <section className={styles.rules} aria-label={copy.rulesTitle}>
+          <h2 className={styles.heading}>{copy.rulesTitle}</h2>
+          {copy.rules.map((paragraph) => (
+            <Text key={paragraph}>{paragraph}</Text>
+          ))}
+          <Text>{copy.difficultyDetail[difficulty]}</Text>
+        </section>
+        {challenge ? (
+          <>
+            <div className={styles.controls}>
+              <span className={styles.pill}>
+                {copy.blocksLeft(unusedBlocks(config.copies, board, pending))}
+              </span>
+              <span className={styles.pill}>
+                {copy.guessesLeft(guessesLeft)}
+              </span>
+              <span className={styles.pill}>
+                {copy.staged(pending.length, config.minPlace)}
+              </span>
+            </div>
+            {config.medianReveal
+              ? challenge.revealed.map((color) => (
+                  <Text key={color}>{copy.medianClue(copy.colors[color])}</Text>
+                ))
+              : null}
+            <OrderBoard
+              challenge={challenge}
+              order={order}
+              remaining={remaining}
+              picked={picked}
+              guess={guess}
+              interactive={interactive}
+              copy={copy}
+              onPick={pickColor}
+              onWeight={(color, value) => {
+                setGuess((current) => ({ ...current, [color]: value }));
+              }}
+            />
+            <p className={styles.hint}>{copy.howToPlace}</p>
+            <Text>
+              {copy.placingOn(
+                selected.scale === "main" ? copy.mainScale : copy.secondScale,
+                selected.side === "left" ? copy.leftPan : copy.rightPan,
+              )}
+            </Text>
+            <label className={styles.checkLabel}>
+              <input
+                type="checkbox"
+                checked={ghostPairs}
+                onChange={(event) => setGhostPairs(event.target.checked)}
+              />
+              {copy.ghostPairs}
+            </label>
+            <section aria-label={copy.inventoryLabel}>
+              <div className={styles.inventory}>
+                {COLORS.map((color) => {
+                  const weightLabel = challenge.revealed.includes(color)
+                    ? copy.knownWeight(challenge.weights[color])
+                    : copy.unknownWeight;
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`${styles.block} ${colorClassName(color)}`}
+                      disabled={!interactive || remaining[color] <= 0}
+                      aria-label={copy.placeBlock(
+                        copy.colors[color],
+                        weightLabel,
+                        remaining[color],
+                      )}
+                      onClick={() => place(color)}
+                    >
+                      {remaining[color]}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+            <div className={styles.scales}>
+              <ScaleCard
+                title={copy.mainScale}
+                scaleId="main"
+                committed={board.main}
+                pending={pending}
+                outcome={reportOutcome(board.main, challenge.weights)}
+                selectedSide={selected.scale === "main" ? selected.side : null}
+                interactive={interactive}
+                ghostPairs={ghostPairs}
+                copy={copy}
+                onSelect={(side) => setSelected({ scale: "main", side })}
+                onRemove={(side, color) => removePending("main", side, color)}
+              />
+              <ScaleCard
+                title={copy.secondScale}
+                scaleId="secondary"
+                committed={board.secondary}
+                pending={pending}
+                outcome={reportOutcome(board.secondary, challenge.weights)}
+                selectedSide={
+                  selected.scale === "secondary" ? selected.side : null
+                }
+                interactive={interactive}
+                ghostPairs={ghostPairs}
+                copy={copy}
+                onSelect={(side) => setSelected({ scale: "secondary", side })}
+                onRemove={(side, color) =>
+                  removePending("secondary", side, color)
+                }
+              />
+            </div>
+            <p className={styles.hint}>{copy.resultNote}</p>
+            <div className={styles.controls}>
+              <Button
+                onClick={commitMove}
+                disabled={
+                  !interactive || !canCommit(pending.length, config.minPlace)
+                }
+              >
+                {copy.commit}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={undo}
+                disabled={!interactive || pending.length === 0}
+              >
+                {copy.undo}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={clearPending}
+                disabled={!interactive || pending.length === 0}
+              >
+                {copy.clearPending}
+              </Button>
+            </div>
+            <p
+              className={`${styles.feedback} ${feedback?.good ? styles.good : ""} ${feedback && !feedback.good ? styles.bad : ""}`}
+              aria-live="polite"
+            >
+              {feedback?.text ?? ""}
+            </p>
+            <section aria-label={copy.historyTitle}>
+              <h2 className={styles.heading}>{copy.historyTitle}</h2>
+              {history.length === 0 ? (
+                <Text>{copy.historyEmpty}</Text>
+              ) : (
+                <ol className={styles.history}>
+                  {history.map((entry) => (
+                    <li key={entry.id} className={styles.historyItem}>
+                      <strong>{copy.moveLabel(entry.id)}</strong>
+                      <span>
+                        {copy.mainScale}:{" "}
+                        {describeAdded(entry.added, "main", copy)} —{" "}
+                        {copy.outcomes[entry.main]}
+                      </span>
+                      <span>
+                        {copy.secondScale}:{" "}
+                        {describeAdded(entry.added, "secondary", copy)} —{" "}
+                        {copy.outcomes[entry.secondary]}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+            <div>
+              <label className={styles.label} htmlFor="scale-notes">
+                {copy.notesLabel}
+              </label>
+              <textarea
+                id="scale-notes"
+                className={styles.notes}
+                value={notes}
+                placeholder={copy.notesPlaceholder}
+                onChange={(event) => setNotes(event.target.value)}
+              />
+            </div>
+            <section aria-label={copy.guessTitle}>
+              <h2 className={styles.heading}>{copy.guessTitle}</h2>
+              {interactive && solved ? (
+                <Stack gap={10}>
+                  <Text>{copy.guessHint}</Text>
+                  <div className={styles.controls}>
+                    <Button onClick={submitGuess}>{copy.submitGuess}</Button>
+                    {config.partialCounts ? (
+                      <Button variant="secondary" onClick={finishPartial}>
+                        {copy.takePartial}
+                      </Button>
+                    ) : null}
+                  </div>
+                </Stack>
+              ) : null}
+              {interactive && !solved ? <Text>{copy.guessLocked}</Text> : null}
+              {!interactive && phase !== "idle" ? (
+                <Stack gap={8}>
+                  <h3 className={styles.heading}>{copy.revealTitle}</h3>
+                  <ul className={styles.weights}>
+                    {COLORS.map((color) => (
+                      <li key={color}>
+                        {copy.weightLine(
+                          copy.colors[color],
+                          challenge.weights[color],
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </Stack>
+              ) : null}
+            </section>
+          </>
+        ) : null}
+      </Stack>
+    </PageWrapper>
+  );
+};
+
+export default ScaleGame;

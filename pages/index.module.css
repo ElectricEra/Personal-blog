@@ -3,31 +3,39 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 24px;
 }
 
-.header {
-  padding: 20px;
+.language-switcher {
+  align-self: flex-end;
+  margin-bottom: 16px;
+}
+
+.content {
+  align-items: center;
+  width: 100%;
+}
+
+.social-media-links {
   display: flex;
-  flex-direction: row;
+  align-items: center;
 }
 
-.social-media-links svg + svg {
+.social-media-links > * + * {
   margin-left: 8px;
+}
+
+.social-link {
+  color: var(--color-black);
+  text-decoration: none;
+  line-height: 0;
+}
+
+.social-link:hover {
+  color: var(--color-dark-blue);
 }
 
 .article-links {
   font-size: 18px;
-}
-
-.article-links > a {
-  color: var(--color-black);
-  text-decoration: none;
-}
-
-.text {
-  color: var(--color-black);
-  text-align: center;
 }
 
 .image-wrapper > img {

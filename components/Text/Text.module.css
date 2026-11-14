@@ -1,0 +1,16 @@
+.text {
+  color: var(--color-black);
+  line-height: 1.6;
+}
+
+.align-left {
+  text-align: left;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.align-justify {
+  text-align: justify;
+}

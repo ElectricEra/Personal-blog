@@ -1,19 +1,27 @@
-import styles from './PageWrapper.module.css';
+import type { ReactNode } from "react";
 
-type Options = {
-  fullScreen?: boolean,
-  additionalStyles?: string,
-  children: React.ReactNode,
-}
+import styles from "./PageWrapper.module.css";
 
-const PageWrapper = ({ fullScreen = false, additionalStyles = '', children }: Options) => {
+type PageWrapperProps = {
+  fullScreen?: boolean;
+  className?: string;
+  children: ReactNode;
+};
+
+export const PageWrapper = ({
+  fullScreen = false,
+  className = "",
+  children,
+}: PageWrapperProps) => {
   return (
-    <div className={styles['page-wrapper']}>
-      <div className={`${styles['page']} ${additionalStyles} ${fullScreen ? styles['page-full-screen'] : ''}`}>
+    <div className={styles["page-wrapper"]}>
+      <div
+        className={`${styles["page"]} ${className} ${fullScreen ? styles["page-full-screen"] : ""}`}
+      >
         {children}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PageWrapper
+export default PageWrapper;
