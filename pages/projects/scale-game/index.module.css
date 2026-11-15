@@ -63,6 +63,15 @@
   gap: 8px;
 }
 
+.rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.2em;
+  line-height: 1.45;
+}
+
 .heading {
   margin: 0;
   font-size: 1.2rem;
@@ -71,6 +80,13 @@
 .hint {
   color: var(--color-dark-grey-blue);
   line-height: 1.5;
+}
+
+.inventoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
 
 .inventory {
@@ -290,9 +306,14 @@
   width: 108px;
   min-height: 92px;
   padding: 8px 6px;
-  border: 2px solid var(--color-black);
+  border: 2px dashed var(--color-black);
   border-radius: 10px;
   background: white;
+}
+
+.slotFilled,
+.slotFixed {
+  border-style: solid;
 }
 
 .slotFixed {
@@ -326,8 +347,44 @@ button.orderChip {
   outline-offset: 2px;
 }
 
+.emptySlot {
+  width: 100%;
+  min-height: 64px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 28px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.emptySlot:disabled {
+  cursor: default;
+}
+
 .knownGrams {
   font-weight: 700;
+}
+
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.trayLabel {
+  width: 100%;
+  font-weight: 700;
+}
+
+.trayChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 108px;
 }
 
 .draft {
@@ -349,11 +406,6 @@ button.orderChip {
 .draft:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.quantity {
-  background: #f3f3f3;
-  cursor: default;
 }
 
 .red {

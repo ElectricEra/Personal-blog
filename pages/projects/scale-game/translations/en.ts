@@ -10,7 +10,7 @@ export const en = {
     hard: "Hard",
   },
   difficultyDetail: {
-    easy: "Weights from 1 to 10, all different. Two colors revealed. Four copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
+    easy: "Weights from 1 to 10, all different. Two colors revealed. Eight copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
     normal:
       "Weights from 1 to 20, all different. The middle color is revealed: two colors are lighter and two are heavier. Eight copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
     hard: "Weights from 1 to 20, all different. One color revealed. Six copies of each color. Place at least 3 blocks per move. One guess. Only a correct guess wins.",
@@ -19,10 +19,15 @@ export const en = {
   thisPuzzle: (name: string) => `This puzzle: ${name}`,
   rulesTitle: "Rules",
   rules: [
-    "Each color has one secret whole-number weight, and every copy of that color weighs the same. A scale never shows grams or how close the pans are. It only shows that the left side is heavier, the right side is heavier, or that both sides balance.",
-    "Blocks you commit stay on the scale. You hold every team's blocks, because all three teams were adding to these same scales. Each move must place at least the minimum for that difficulty. One move may use both scales and any pan. Blocks you have not committed stay in your inventory.",
-    "The second scale is only for comparisons. The main scale counts as solved when it balances and the two pans hold different combinations. One red against one red does not count, and two empty pans do not count.",
-    "A solved main scale lets you guess all five weights. A wrong guess says only that the set is wrong. On Easy and Normal, a valid balance is a partial success even if the guess fails or you skip it. On Hard, the round is a success only when every weight is correct.",
+    "Each color has one hidden whole-number weight. Every copy of that color weighs the same.",
+    "A scale only shows which side is heavier, or that the pans balance. It never shows grams.",
+    "Committed blocks stay on the scales. Blocks you have not committed stay in your inventory.",
+    "One move may use both scales and any pan. It must place at least the minimum for the difficulty.",
+    "The second scale is only for comparisons.",
+    "The main scale is solved when it balances and the pans hold different combinations. Matching pans, including two empty pans, do not count.",
+    "A solved main scale lets you guess all five weights. A wrong guess only says the set is wrong.",
+    "On Easy and Normal, a valid balance is a partial success even if the guess fails or you skip it.",
+    "On Hard, the round is a success only when every weight is correct.",
   ],
   inventoryLabel: "Blocks",
   remaining: (count: number) => `${count} left`,
@@ -53,6 +58,10 @@ export const en = {
   commit: "Commit move",
   undo: "Undo",
   clearPending: "Clear",
+  resign: "Resign",
+  resignPrompt: "Resign and reveal the weights? This ends the puzzle.",
+  resignYes: "Reveal weights",
+  resignNo: "Keep playing",
   needMore: (count: number) =>
     `Place at least ${count} blocks before committing.`,
   howToPlace:
@@ -61,10 +70,12 @@ export const en = {
   ghostedBlock: "cancels",
   orderTitle: "Assumed order",
   orderHint:
-    "Heavier on the left. Select a color, then another color, to swap them. Write any weight you have worked out. The copies left cannot be edited.",
+    "Heavier on the left. Select a color, then a position. Select a placed color again to take it out. Write any weight you have worked out.",
   orderMiddle: "Known middle weight",
+  orderEmpty: (place: number) =>
+    `Empty position ${place}. Heavier colors stand further left.`,
+  orderTray: "Not placed yet",
   orderPick: (color: string) => `Select ${color}`,
-  orderQuantity: (color: string) => `Copies of ${color} left`,
   draftWeight: (color: string) => `Preliminary weight for ${color}`,
   resultNote: "The beam shows only the blocks you have already committed.",
   notesLabel: "Notes",

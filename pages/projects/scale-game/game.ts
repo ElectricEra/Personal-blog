@@ -50,7 +50,7 @@ export const DIFFICULTIES = {
     minWeight: 1,
     maxWeight: 10,
     revealedCount: 2,
-    copies: 4,
+    copies: 8,
     minPlace: 2,
     guesses: 2,
     partialCounts: true,

@@ -74,17 +74,17 @@ const isDifficulty = (value: string): value is Difficulty =>
 const MIDDLE_SLOT = 2;
 const SLOT_KEYS = ["heaviest", "heavy", "middle", "light", "lightest"] as const;
 
-const orderFromChallenge = (challenge: Challenge): Color[] => {
-  if (!DIFFICULTIES[challenge.difficulty].medianReveal) {
-    return [...COLORS];
+const emptyOrder = (): Array<Color | null> => [null, null, null, null, null];
+
+const orderFromChallenge = (challenge: Challenge): Array<Color | null> => {
+  const slots = emptyOrder();
+  if (DIFFICULTIES[challenge.difficulty].medianReveal) {
+    const middle = challenge.revealed[0];
+    if (middle) {
+      slots[MIDDLE_SLOT] = middle;
+    }
   }
-  const middle = challenge.revealed[0];
-  const rest = COLORS.filter((color) => color !== middle);
-  const [first, second, fourth, fifth] = rest;
-  if (!middle || !first || !second || !fourth || !fifth) {
-    return [...COLORS];
-  }
-  return [first, second, middle, fourth, fifth];
+  return slots;
 };
 
 const slotIsFixed = (challenge: Challenge, index: number) =>
@@ -324,27 +324,29 @@ const ScaleCard = ({
 
 type OrderBoardProps = {
   challenge: Challenge;
-  order: Color[];
-  remaining: Pan;
+  order: Array<Color | null>;
   picked: Color | null;
   guess: Record<Color, string>;
   interactive: boolean;
   copy: GameTranslation;
   onPick: (color: Color) => void;
+  onPlace: (index: number) => void;
   onWeight: (color: Color, value: string) => void;
 };
 
 const OrderBoard = ({
   challenge,
   order,
-  remaining,
   picked,
   guess,
   interactive,
   copy,
   onPick,
+  onPlace,
   onWeight,
 }: OrderBoardProps) => {
+  const unplaced = COLORS.filter((color) => !order.includes(color));
+
   const weightControl = (color: Color) => {
     if (challenge.revealed.includes(color)) {
       return (
@@ -368,6 +370,19 @@ const OrderBoard = ({
     );
   };
 
+  const chip = (color: Color) => (
+    <button
+      type="button"
+      className={`${styles.orderChip} ${colorClassName(color)} ${picked === color ? styles.orderChipSelected : ""}`}
+      aria-pressed={picked === color}
+      aria-label={copy.orderPick(copy.colors[color])}
+      disabled={!interactive}
+      onClick={() => onPick(color)}
+    >
+      {copy.short[color]} {copy.colors[color]}
+    </button>
+  );
+
   return (
     <section className={styles.order} aria-label={copy.orderTitle}>
       <h2 className={styles.heading}>{copy.orderTitle}</h2>
@@ -376,44 +391,39 @@ const OrderBoard = ({
         {SLOT_KEYS.map((slotKey) => {
           const index = SLOT_KEYS.indexOf(slotKey);
           const color = order[index];
-          if (!color) {
-            return null;
-          }
           const fixed = slotIsFixed(challenge, index);
           return (
             <div key={slotKey} className={styles.chainItem}>
               <div
-                className={`${styles.slot} ${fixed ? styles.slotFixed : ""} ${picked && !fixed ? styles.slotReady : ""}`}
+                className={`${styles.slot} ${color ? styles.slotFilled : ""} ${fixed ? styles.slotFixed : ""} ${picked && !fixed ? styles.slotReady : ""}`}
               >
-                {fixed ? (
-                  <span
-                    className={`${styles.orderChip} ${colorClassName(color)}`}
-                  >
-                    {copy.short[color]} {copy.colors[color]}
-                  </span>
+                {color ? (
+                  <>
+                    {fixed ? (
+                      <span
+                        className={`${styles.orderChip} ${colorClassName(color)}`}
+                      >
+                        {copy.short[color]} {copy.colors[color]}
+                      </span>
+                    ) : (
+                      chip(color)
+                    )}
+                    {weightControl(color)}
+                    {fixed ? (
+                      <span className={styles.srOnly}>{copy.orderMiddle}</span>
+                    ) : null}
+                  </>
                 ) : (
                   <button
                     type="button"
-                    className={`${styles.orderChip} ${colorClassName(color)} ${picked === color ? styles.orderChipSelected : ""}`}
-                    aria-pressed={picked === color}
-                    aria-label={copy.orderPick(copy.colors[color])}
+                    className={styles.emptySlot}
                     disabled={!interactive}
-                    onClick={() => onPick(color)}
+                    aria-label={copy.orderEmpty(index + 1)}
+                    onClick={() => onPlace(index)}
                   >
-                    {copy.short[color]} {copy.colors[color]}
+                    _
                   </button>
                 )}
-                {weightControl(color)}
-                <input
-                  className={`${styles.draft} ${styles.quantity}`}
-                  readOnly
-                  tabIndex={-1}
-                  aria-label={copy.orderQuantity(copy.colors[color])}
-                  value={remaining[color]}
-                />
-                {fixed ? (
-                  <span className={styles.srOnly}>{copy.orderMiddle}</span>
-                ) : null}
               </div>
               {index < SLOT_KEYS.length - 1 ? (
                 <span className={styles.relation} aria-hidden="true">
@@ -424,6 +434,17 @@ const OrderBoard = ({
           );
         })}
       </div>
+      {unplaced.length > 0 ? (
+        <div className={styles.tray}>
+          <span className={styles.trayLabel}>{copy.orderTray}</span>
+          {unplaced.map((color) => (
+            <div key={color} className={styles.trayChip}>
+              {chip(color)}
+              {weightControl(color)}
+            </div>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 };
@@ -445,8 +466,9 @@ const ScaleGame = () => {
   const [phase, setPhase] = useState<Phase>("idle");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [ghostPairs, setGhostPairs] = useState(false);
-  const [order, setOrder] = useState<Color[]>([...COLORS]);
+  const [order, setOrder] = useState<Array<Color | null>>(emptyOrder);
   const [picked, setPicked] = useState<Color | null>(null);
+  const [resigning, setResigning] = useState(false);
 
   const config = challenge
     ? DIFFICULTIES[challenge.difficulty]
@@ -470,6 +492,7 @@ const ScaleGame = () => {
     setGuess(guessFromChallenge(next));
     setOrder(orderFromChallenge(next));
     setPicked(null);
+    setResigning(false);
     setPhase("playing");
     setFeedback(null);
   };
@@ -477,27 +500,33 @@ const ScaleGame = () => {
   const fixedColor =
     challenge && config.medianReveal ? (challenge.revealed[0] ?? null) : null;
 
-  const swapColors = (source: Color, target: Color) => {
-    if (
-      !interactive ||
-      !challenge ||
-      source === target ||
-      source === fixedColor ||
-      target === fixedColor
-    ) {
+  const moveColor = (color: Color, toIndex: number | null) => {
+    if (!interactive || !challenge || color === fixedColor) {
+      return;
+    }
+    if (toIndex !== null && slotIsFixed(challenge, toIndex)) {
       return;
     }
     setOrder((current) => {
       const next = [...current];
-      const fromIndex = next.indexOf(source);
-      const toIndex = next.indexOf(target);
-      const from = next[fromIndex];
-      const to = next[toIndex];
-      if (fromIndex < 0 || toIndex < 0 || !from || !to) {
+      const fromIndex = next.indexOf(color);
+      if (toIndex === null) {
+        if (fromIndex >= 0) {
+          next[fromIndex] = null;
+        }
+        return next;
+      }
+      if (fromIndex === toIndex) {
         return current;
       }
-      next[fromIndex] = to;
-      next[toIndex] = from;
+      const occupant = next[toIndex];
+      if (occupant && occupant === fixedColor) {
+        return current;
+      }
+      next[toIndex] = color;
+      if (fromIndex >= 0) {
+        next[fromIndex] = occupant ?? null;
+      }
       return next;
     });
     setPicked(null);
@@ -507,11 +536,36 @@ const ScaleGame = () => {
     if (!interactive || !challenge || color === fixedColor) {
       return;
     }
-    if (!picked || picked === color) {
-      setPicked((current) => (current === color ? null : color));
+    if (picked === color) {
+      if (order.includes(color)) {
+        moveColor(color, null);
+        return;
+      }
+      setPicked(null);
       return;
     }
-    swapColors(picked, color);
+    if (picked) {
+      const destination = order.indexOf(color);
+      if (destination >= 0) {
+        moveColor(picked, destination);
+        return;
+      }
+    }
+    setPicked((current) => (current === color ? null : color));
+  };
+
+  const placePicked = (index: number) => {
+    if (!interactive || !challenge) {
+      return;
+    }
+    if (picked) {
+      moveColor(picked, index);
+      return;
+    }
+    const occupant = order[index];
+    if (occupant && occupant !== fixedColor) {
+      setPicked(occupant);
+    }
   };
 
   const place = (color: Color) => {
@@ -638,6 +692,16 @@ const ScaleGame = () => {
     setFeedback(null);
   };
 
+  const resign = () => {
+    if (!challenge || !interactive) {
+      return;
+    }
+    setPending([]);
+    setResigning(false);
+    setPhase("failure");
+    setFeedback(null);
+  };
+
   return (
     <PageWrapper fullScreen>
       <BackButton href="/projects" text={copy.back} />
@@ -668,20 +732,36 @@ const ScaleGame = () => {
             ))}
           </select>
           <Button onClick={startGame}>{copy.newGame}</Button>
+          {interactive && !resigning ? (
+            <Button variant="secondary" onClick={() => setResigning(true)}>
+              {copy.resign}
+            </Button>
+          ) : null}
           {challenge ? (
             <span className={styles.pill}>
               {copy.thisPuzzle(copy.difficulties[challenge.difficulty])}
             </span>
           ) : null}
         </div>
+        {interactive && resigning ? (
+          <div className={styles.controls}>
+            <span className={styles.label}>{copy.resignPrompt}</span>
+            <Button onClick={resign}>{copy.resignYes}</Button>
+            <Button variant="secondary" onClick={() => setResigning(false)}>
+              {copy.resignNo}
+            </Button>
+          </div>
+        ) : null}
         <p className={styles.status} aria-live="polite">
           {statusMessage(copy, phase, solved, config.partialCounts)}
         </p>
         <section className={styles.rules} aria-label={copy.rulesTitle}>
           <h2 className={styles.heading}>{copy.rulesTitle}</h2>
-          {copy.rules.map((paragraph) => (
-            <Text key={paragraph}>{paragraph}</Text>
-          ))}
+          <ul className={styles.rulesList}>
+            {copy.rules.map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+          </ul>
           <Text>{copy.difficultyDetail[difficulty]}</Text>
         </section>
         {challenge ? (
@@ -693,28 +773,12 @@ const ScaleGame = () => {
               <span className={styles.pill}>
                 {copy.guessesLeft(guessesLeft)}
               </span>
-              <span className={styles.pill}>
-                {copy.staged(pending.length, config.minPlace)}
-              </span>
             </div>
             {config.medianReveal
               ? challenge.revealed.map((color) => (
                   <Text key={color}>{copy.medianClue(copy.colors[color])}</Text>
                 ))
               : null}
-            <OrderBoard
-              challenge={challenge}
-              order={order}
-              remaining={remaining}
-              picked={picked}
-              guess={guess}
-              interactive={interactive}
-              copy={copy}
-              onPick={pickColor}
-              onWeight={(color, value) => {
-                setGuess((current) => ({ ...current, [color]: value }));
-              }}
-            />
             <p className={styles.hint}>{copy.howToPlace}</p>
             <Text>
               {copy.placingOn(
@@ -722,6 +786,60 @@ const ScaleGame = () => {
                 selected.side === "left" ? copy.leftPan : copy.rightPan,
               )}
             </Text>
+            <div className={styles.controls}>
+              <Button
+                onClick={commitMove}
+                disabled={
+                  !interactive || !canCommit(pending.length, config.minPlace)
+                }
+              >
+                {copy.commit}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={undo}
+                disabled={!interactive || pending.length === 0}
+              >
+                {copy.undo}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={clearPending}
+                disabled={!interactive || pending.length === 0}
+              >
+                {copy.clearPending}
+              </Button>
+            </div>
+            <div className={styles.inventoryRow}>
+              <section aria-label={copy.inventoryLabel}>
+                <div className={styles.inventory}>
+                  {COLORS.map((color) => {
+                    const weightLabel = challenge.revealed.includes(color)
+                      ? copy.knownWeight(challenge.weights[color])
+                      : copy.unknownWeight;
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`${styles.block} ${colorClassName(color)}`}
+                        disabled={!interactive || remaining[color] <= 0}
+                        aria-label={copy.placeBlock(
+                          copy.colors[color],
+                          weightLabel,
+                          remaining[color],
+                        )}
+                        onClick={() => place(color)}
+                      >
+                        {remaining[color]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+              <span className={styles.pill}>
+                {copy.staged(pending.length, config.minPlace)}
+              </span>
+            </div>
             <label className={styles.checkLabel}>
               <input
                 type="checkbox"
@@ -730,31 +848,12 @@ const ScaleGame = () => {
               />
               {copy.ghostPairs}
             </label>
-            <section aria-label={copy.inventoryLabel}>
-              <div className={styles.inventory}>
-                {COLORS.map((color) => {
-                  const weightLabel = challenge.revealed.includes(color)
-                    ? copy.knownWeight(challenge.weights[color])
-                    : copy.unknownWeight;
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`${styles.block} ${colorClassName(color)}`}
-                      disabled={!interactive || remaining[color] <= 0}
-                      aria-label={copy.placeBlock(
-                        copy.colors[color],
-                        weightLabel,
-                        remaining[color],
-                      )}
-                      onClick={() => place(color)}
-                    >
-                      {remaining[color]}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            <p
+              className={`${styles.feedback} ${feedback?.good ? styles.good : ""} ${feedback && !feedback.good ? styles.bad : ""}`}
+              aria-live="polite"
+            >
+              {feedback?.text ?? ""}
+            </p>
             <div className={styles.scales}>
               <ScaleCard
                 title={copy.mainScale}
@@ -788,36 +887,31 @@ const ScaleGame = () => {
               />
             </div>
             <p className={styles.hint}>{copy.resultNote}</p>
-            <div className={styles.controls}>
-              <Button
-                onClick={commitMove}
-                disabled={
-                  !interactive || !canCommit(pending.length, config.minPlace)
-                }
-              >
-                {copy.commit}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={undo}
-                disabled={!interactive || pending.length === 0}
-              >
-                {copy.undo}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={clearPending}
-                disabled={!interactive || pending.length === 0}
-              >
-                {copy.clearPending}
-              </Button>
+            <OrderBoard
+              challenge={challenge}
+              order={order}
+              picked={picked}
+              guess={guess}
+              interactive={interactive}
+              copy={copy}
+              onPick={pickColor}
+              onPlace={placePicked}
+              onWeight={(color, value) => {
+                setGuess((current) => ({ ...current, [color]: value }));
+              }}
+            />
+            <div>
+              <label className={styles.label} htmlFor="scale-notes">
+                {copy.notesLabel}
+              </label>
+              <textarea
+                id="scale-notes"
+                className={styles.notes}
+                value={notes}
+                placeholder={copy.notesPlaceholder}
+                onChange={(event) => setNotes(event.target.value)}
+              />
             </div>
-            <p
-              className={`${styles.feedback} ${feedback?.good ? styles.good : ""} ${feedback && !feedback.good ? styles.bad : ""}`}
-              aria-live="polite"
-            >
-              {feedback?.text ?? ""}
-            </p>
             <section aria-label={copy.historyTitle}>
               <h2 className={styles.heading}>{copy.historyTitle}</h2>
               {history.length === 0 ? (
@@ -842,18 +936,6 @@ const ScaleGame = () => {
                 </ol>
               )}
             </section>
-            <div>
-              <label className={styles.label} htmlFor="scale-notes">
-                {copy.notesLabel}
-              </label>
-              <textarea
-                id="scale-notes"
-                className={styles.notes}
-                value={notes}
-                placeholder={copy.notesPlaceholder}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </div>
             <section aria-label={copy.guessTitle}>
               <h2 className={styles.heading}>{copy.guessTitle}</h2>
               {interactive && solved ? (
