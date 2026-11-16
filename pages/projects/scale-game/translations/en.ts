@@ -4,7 +4,6 @@ export const en = {
   intro:
     "Five colors hide their weights. Spend a limited set of blocks on two scales, then deduce every number.",
   difficultyLabel: "Difficulty",
-  difficultyPlaceholder: "Choose a difficulty",
   difficulties: {
     easy: "Easy",
     normal: "Normal",
@@ -14,12 +13,13 @@ export const en = {
     easy: "Weights from 1 to 10, all different. Two colors revealed. Eight copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
     normal:
       "Weights from 1 to 20, all different. The middle color is revealed: two colors are lighter and two are heavier. Eight copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
-    hard: "Weights from 1 to 20, all different. One color revealed. Six copies of each color. Place at least 3 blocks per move. One guess. Only a correct guess wins.",
+    hard: "Weights from 1 to 20, all different. One color revealed. Eight copies of each color. Place at least 3 blocks per move. One guess. Only a correct guess wins.",
   },
   controlsTitle: "Game Controls",
   newGame: "New puzzle",
   thisPuzzle: (name: string) => `This puzzle: ${name}`,
   rulesTitle: "Rules",
+  startingTitle: "Starting information",
   settingsTitle: "Settings",
   rules: [
     "Each color has one hidden whole-number weight. Every copy of that color weighs the same.",
@@ -35,8 +35,10 @@ export const en = {
   inventoryLabel: "Blocks",
   remaining: (count: number) => `${count} left`,
   knownWeight: (weight: number) => `${weight} g`,
-  medianClue: (color: string) =>
-    `${color} is third by weight. Two colors are lighter and two are heavier.`,
+  medianClue: (color: string, weight: number) =>
+    `${color} weighs ${weight} g and is third by weight. Two colors are lighter and two are heavier.`,
+  revealedWeight: (color: string, weight: number) =>
+    `${color} weighs ${weight} g.`,
   unknownWeight: "?",
   placeBlock: (color: string, weight: string, count: number) =>
     `Place ${color}, ${weight}, ${count} left`,
@@ -69,9 +71,11 @@ export const en = {
     `Place at least ${count} blocks before committing.`,
   howToPlace:
     "Choose a pan, then a color. Dashed blocks are not weighed until you commit. Undo removes the last one.",
+  placeHint: "How to place blocks",
   ghostPairs: "Ghost blocks that have a match on the other pan",
   ghostedBlock: "cancels",
   orderTitle: "Assumed order",
+  yourInformation: "Your information",
   orderHint:
     "Heavier on the left. Select a color, then a position. Select a placed color again to take it out. Write any weight you have worked out.",
   orderMiddle: "Known middle weight",

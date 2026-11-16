@@ -55,10 +55,6 @@
   color: var(--color-black);
 }
 
-.selectPending {
-  color: #767676;
-}
-
 .controlStack > button,
 .controlStack > .select,
 .popoverAnchor {
@@ -123,9 +119,90 @@
   line-height: 1.45;
 }
 
+.starting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-black);
+}
+
+.startingTitle {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
 .heading {
   margin: 0;
   font-size: 1.2rem;
+}
+
+.information {
+  margin: 0;
+  font-size: 1.2rem;
+  scroll-margin-top: 16px;
+}
+
+.scaleTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hintTip {
+  position: relative;
+  display: inline-flex;
+}
+
+.hintButton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-dark-blue);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: help;
+}
+
+.hintButton:focus-visible {
+  border-radius: 99px;
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: 2px;
+}
+
+.hintBubble {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 3;
+  display: none;
+  width: max-content;
+  max-width: min(280px, 70vw);
+  padding: 8px 10px;
+  border: 1px solid var(--color-black);
+  border-radius: 8px;
+  background: white;
+  color: var(--color-black);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: 0 4px 12px rgb(12 20 33 / 12%);
+}
+
+.hintBubble p {
+  margin: 0;
+}
+
+.hintBubble p + p {
+  margin-top: 6px;
+}
+
+.hintTip:hover .hintBubble,
+.hintTip:focus-within .hintBubble {
+  display: block;
 }
 
 .hint {
@@ -137,12 +214,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 
 .inventory {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -574,6 +653,12 @@ button.orderChip {
   border: 0;
 }
 
+@media (min-width: 721px) {
+  .moveControls > button {
+    flex: 1;
+  }
+}
+
 @media (max-width: 720px) {
   .answers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -583,9 +668,7 @@ button.orderChip {
     grid-template-columns: 1fr;
   }
 
-  .controls,
-  .inventoryRow,
-  .inventory {
+  .controls {
     justify-content: center;
   }
 }

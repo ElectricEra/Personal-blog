@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
 import { BackButton } from "@/components/BackButton/BackButton";
 import { Button } from "@/components/Button/Button";
@@ -214,6 +215,7 @@ const ScaleCard = ({
   onSelect,
   onRemove,
 }: ScaleCardProps) => {
+  const hintId = useId();
   const pans: Array<{ side: Side; label: string }> = [
     { side: "left", label: copy.leftPan },
     { side: "right", label: copy.rightPan },
@@ -227,7 +229,22 @@ const ScaleCard = ({
 
   return (
     <section className={styles.scaleCard} aria-label={title}>
-      <h2 className={styles.heading}>{title}</h2>
+      <div className={styles.scaleTitle}>
+        <h2 className={styles.heading}>{title}</h2>
+        <span className={styles.hintTip}>
+          <button
+            type="button"
+            className={styles.hintButton}
+            aria-label={copy.placeHint}
+            aria-describedby={hintId}
+          >
+            <HiOutlineQuestionMarkCircle aria-hidden />
+          </button>
+          <span id={hintId} role="tooltip" className={styles.hintBubble}>
+            <p className={styles.hint}>{copy.howToPlace}</p>
+          </span>
+        </span>
+      </div>
       <p className={styles.outcome} aria-live="polite">
         {copy.outcomes[outcome]}
       </p>
@@ -430,7 +447,7 @@ const OrderBoard = ({
 
 const ScaleGame = () => {
   const copy = useTranslation(translations);
-  const [difficulty, setDifficulty] = useState<Difficulty | "">("");
+  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [board, setBoard] = useState<Board>(emptyBoard());
   const [pending, setPending] = useState<Placement[]>([]);
@@ -448,6 +465,7 @@ const ScaleGame = () => {
   const [order, setOrder] = useState<Array<Color | null>>(emptyOrder);
   const [picked, setPicked] = useState<Color | null>(null);
   const [resigning, setResigning] = useState(false);
+  const informationRef = useRef<HTMLHeadingElement>(null);
 
   const config =
     DIFFICULTIES[challenge?.difficulty ?? (difficulty || "normal")];
@@ -458,9 +476,6 @@ const ScaleGame = () => {
   const remaining = copiesLeft(config.copies, board, pending);
 
   const startGame = () => {
-    if (!difficulty) {
-      return;
-    }
     const next = createChallenge(difficulty);
     const nextConfig = DIFFICULTIES[difficulty];
     setChallenge(next);
@@ -477,6 +492,13 @@ const ScaleGame = () => {
     setPhase("playing");
     setFeedback(null);
   };
+
+  useEffect(() => {
+    informationRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [challenge]);
 
   const fixedColor =
     challenge && config.medianReveal ? (challenge.revealed[0] ?? null) : null;
@@ -698,7 +720,7 @@ const ScaleGame = () => {
           <div className={styles.controlStack}>
             <select
               id="scale-difficulty"
-              className={`${styles.select} ${difficulty ? "" : styles.selectPending}`}
+              className={styles.select}
               aria-label={copy.difficultyLabel}
               value={difficulty}
               onChange={(event) => {
@@ -708,18 +730,13 @@ const ScaleGame = () => {
                 }
               }}
             >
-              <option value="" disabled>
-                {copy.difficultyPlaceholder}
-              </option>
               {DIFFICULTY_IDS.map((id) => (
                 <option key={id} value={id}>
                   {copy.difficulties[id]}
                 </option>
               ))}
             </select>
-            <Button onClick={startGame} disabled={!difficulty}>
-              {copy.newGame}
-            </Button>
+            <Button onClick={startGame}>{copy.newGame}</Button>
             {interactive ? (
               <Popover
                 className={styles.popoverAnchor}
@@ -735,13 +752,6 @@ const ScaleGame = () => {
                 </Button>
               </Popover>
             ) : null}
-            {challenge ? (
-              <span
-                className={`${styles.puzzleBadge} ${styles[challenge.difficulty]}`}
-              >
-                {copy.thisPuzzle(copy.difficulties[challenge.difficulty])}
-              </span>
-            ) : null}
           </div>
         </Collapsible>
         <Collapsible title={copy.rulesTitle} defaultOpen>
@@ -750,33 +760,42 @@ const ScaleGame = () => {
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-          {difficulty ? <Text>{copy.difficultyDetail[difficulty]}</Text> : null}
-        </Collapsible>
-        <Collapsible title={copy.settingsTitle}>
-          <label className={styles.checkLabel}>
-            <input
-              type="checkbox"
-              checked={ghostPairs}
-              onChange={(event) => setGhostPairs(event.target.checked)}
-            />
-            {copy.ghostPairs}
-          </label>
+          <div className={styles.starting}>
+            <h3 className={styles.startingTitle}>{copy.startingTitle}</h3>
+            <Text>{copy.difficultyDetail[difficulty]}</Text>
+          </div>
         </Collapsible>
         {challenge ? (
+          <Collapsible title={copy.settingsTitle}>
+            <label className={styles.checkLabel}>
+              <input
+                type="checkbox"
+                checked={ghostPairs}
+                onChange={(event) => setGhostPairs(event.target.checked)}
+              />
+              {copy.ghostPairs}
+            </label>
+          </Collapsible>
+        ) : null}
+        {challenge ? (
           <>
-            {config.medianReveal
-              ? challenge.revealed.map((color) => (
-                  <Text key={color}>{copy.medianClue(copy.colors[color])}</Text>
-                ))
-              : null}
-            <p className={styles.hint}>{copy.howToPlace}</p>
-            <Text>
-              {copy.placingOn(
-                selected.scale === "main" ? copy.mainScale : copy.secondScale,
-                selected.side === "left" ? copy.leftPan : copy.rightPan,
-              )}
-            </Text>
-            <div className={styles.controls}>
+            <h2 ref={informationRef} className={styles.information}>
+              {copy.yourInformation}
+            </h2>
+            {challenge.revealed.map((color) => (
+              <Text key={color}>
+                {config.medianReveal
+                  ? copy.medianClue(
+                      copy.colors[color],
+                      challenge.weights[color],
+                    )
+                  : copy.revealedWeight(
+                      copy.colors[color],
+                      challenge.weights[color],
+                    )}
+              </Text>
+            ))}
+            <div className={`${styles.controls} ${styles.moveControls}`}>
               <Button
                 onClick={commitMove}
                 disabled={
