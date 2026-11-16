@@ -4,6 +4,7 @@ export const en = {
   intro:
     "Five colors hide their weights. Spend a limited set of blocks on two scales, then deduce every number.",
   difficultyLabel: "Difficulty",
+  difficultyPlaceholder: "Choose a difficulty",
   difficulties: {
     easy: "Easy",
     normal: "Normal",
@@ -15,9 +16,11 @@ export const en = {
       "Weights from 1 to 20, all different. The middle color is revealed: two colors are lighter and two are heavier. Eight copies of each color. Place at least 2 blocks per move. Two guesses. A balanced main scale counts as a partial success.",
     hard: "Weights from 1 to 20, all different. One color revealed. Six copies of each color. Place at least 3 blocks per move. One guess. Only a correct guess wins.",
   },
+  controlsTitle: "Game Controls",
   newGame: "New puzzle",
   thisPuzzle: (name: string) => `This puzzle: ${name}`,
   rulesTitle: "Rules",
+  settingsTitle: "Settings",
   rules: [
     "Each color has one hidden whole-number weight. Every copy of that color weighs the same.",
     "A scale only shows which side is heavier, or that the pans balance. It never shows grams.",
@@ -80,14 +83,7 @@ export const en = {
   resultNote: "The beam shows only the blocks you have already committed.",
   notesLabel: "Notes",
   notesPlaceholder: "Write inequalities, equations, and ideas here.",
-  guessTitle: "Guess the weights",
-  guessHint:
-    "Submit sends the preliminary weights already written on the colors. A wrong guess does not reveal which value missed.",
-  guessLocked:
-    "Balance the main scale with two different combinations to unlock a guess.",
   submitGuess: "Submit guess",
-  guessesLeft: (count: number) => `Guesses left: ${count}`,
-  blocksLeft: (count: number) => `Blocks left: ${count}`,
   staged: (count: number, min: number) => `Staged: ${count} / ${min}`,
   invalidGuess: (min: number, max: number) =>
     `Enter a whole number from ${min} to ${max} for every color.`,
@@ -98,20 +94,11 @@ export const en = {
     "Those pans hold the same combination, so the balance does not count.",
   placingOn: (scale: string, side: string) =>
     `Placing on ${scale}, ${side} pan.`,
-  statusIdle:
-    "Choose a difficulty and start a puzzle. One or two weights are shown. The rest stay hidden.",
-  statusPlaying:
-    "Spend blocks, read which side is heavier, and balance the main scale.",
   statusSolved:
     "The main scale is balanced with two different combinations. Guess the five weights.",
   statusSolvedPartial:
     "The main scale is balanced. Guess the weights, or finish with a partial success.",
-  statusFull: "Full success. Every weight is correct.",
-  statusPartial:
-    "Partial success. The main scale is balanced, but the weights are not all identified.",
-  statusFailure: "Failure. This round did not meet its winning condition.",
   revealTitle: "The weights",
-  weightLine: (color: string, weight: number) => `${color} = ${weight}`,
   colors: {
     red: "Red",
     yellow: "Yellow",

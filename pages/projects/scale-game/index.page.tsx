@@ -2,7 +2,10 @@ import { useState } from "react";
 
 import { BackButton } from "@/components/BackButton/BackButton";
 import { Button } from "@/components/Button/Button";
+import { Collapsible } from "@/components/Collapsible/Collapsible";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher/LanguageSwitcher";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
+import { Popover } from "@/components/Popover/Popover";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { Stack } from "@/components/Stack/Stack";
 import { Text } from "@/components/Text/Text";
@@ -114,30 +117,6 @@ const tiltClassName = (outcome: ReportedOutcome) => {
     return styles.tiltRight;
   }
   return styles.tiltLevel;
-};
-
-const statusMessage = (
-  copy: GameTranslation,
-  phase: Phase,
-  solved: boolean,
-  partialCounts: boolean,
-) => {
-  if (phase === "idle") {
-    return copy.statusIdle;
-  }
-  if (phase === "full") {
-    return copy.statusFull;
-  }
-  if (phase === "partial") {
-    return copy.statusPartial;
-  }
-  if (phase === "failure") {
-    return copy.statusFailure;
-  }
-  if (solved) {
-    return partialCounts ? copy.statusSolvedPartial : copy.statusSolved;
-  }
-  return copy.statusPlaying;
 };
 
 const describeAdded = (
@@ -451,7 +430,7 @@ const OrderBoard = ({
 
 const ScaleGame = () => {
   const copy = useTranslation(translations);
-  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const [difficulty, setDifficulty] = useState<Difficulty | "">("");
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [board, setBoard] = useState<Board>(emptyBoard());
   const [pending, setPending] = useState<Placement[]>([]);
@@ -470,9 +449,8 @@ const ScaleGame = () => {
   const [picked, setPicked] = useState<Color | null>(null);
   const [resigning, setResigning] = useState(false);
 
-  const config = challenge
-    ? DIFFICULTIES[challenge.difficulty]
-    : DIFFICULTIES[difficulty];
+  const config =
+    DIFFICULTIES[challenge?.difficulty ?? (difficulty || "normal")];
   const solved = challenge
     ? mainIsSolved(board.main, challenge.weights)
     : false;
@@ -480,6 +458,9 @@ const ScaleGame = () => {
   const remaining = copiesLeft(config.copies, board, pending);
 
   const startGame = () => {
+    if (!difficulty) {
+      return;
+    }
     const next = createChallenge(difficulty);
     const nextConfig = DIFFICULTIES[difficulty];
     setChallenge(next);
@@ -704,76 +685,85 @@ const ScaleGame = () => {
 
   return (
     <PageWrapper fullScreen>
-      <BackButton href="/projects" text={copy.back} />
+      <div className={styles.topBar}>
+        <BackButton href="/projects" text={copy.back} />
+        <LanguageSwitcher />
+      </div>
       <SectionHeader>{copy.title}</SectionHeader>
       <Text className={styles.intro} align="center">
         {copy.intro}
       </Text>
       <Stack className={styles.game} gap={14}>
-        <div className={styles.controls}>
-          <label className={styles.label} htmlFor="scale-difficulty">
-            {copy.difficultyLabel}
-          </label>
-          <select
-            id="scale-difficulty"
-            className={styles.select}
-            value={difficulty}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (isDifficulty(value)) {
-                setDifficulty(value);
-              }
-            }}
-          >
-            {DIFFICULTY_IDS.map((id) => (
-              <option key={id} value={id}>
-                {copy.difficulties[id]}
+        <Collapsible title={copy.controlsTitle} defaultOpen>
+          <div className={styles.controlStack}>
+            <select
+              id="scale-difficulty"
+              className={`${styles.select} ${difficulty ? "" : styles.selectPending}`}
+              aria-label={copy.difficultyLabel}
+              value={difficulty}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (isDifficulty(value)) {
+                  setDifficulty(value);
+                }
+              }}
+            >
+              <option value="" disabled>
+                {copy.difficultyPlaceholder}
               </option>
-            ))}
-          </select>
-          <Button onClick={startGame}>{copy.newGame}</Button>
-          {interactive && !resigning ? (
-            <Button variant="secondary" onClick={() => setResigning(true)}>
-              {copy.resign}
+              {DIFFICULTY_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {copy.difficulties[id]}
+                </option>
+              ))}
+            </select>
+            <Button onClick={startGame} disabled={!difficulty}>
+              {copy.newGame}
             </Button>
-          ) : null}
-          {challenge ? (
-            <span className={styles.pill}>
-              {copy.thisPuzzle(copy.difficulties[challenge.difficulty])}
-            </span>
-          ) : null}
-        </div>
-        {interactive && resigning ? (
-          <div className={styles.controls}>
-            <span className={styles.label}>{copy.resignPrompt}</span>
-            <Button onClick={resign}>{copy.resignYes}</Button>
-            <Button variant="secondary" onClick={() => setResigning(false)}>
-              {copy.resignNo}
-            </Button>
+            {interactive ? (
+              <Popover
+                className={styles.popoverAnchor}
+                open={resigning}
+                onOpenChange={setResigning}
+                label={copy.resignPrompt}
+                trigger={<Button variant="secondary">{copy.resign}</Button>}
+              >
+                <p className={styles.resignPrompt}>{copy.resignPrompt}</p>
+                <Button onClick={resign}>{copy.resignYes}</Button>
+                <Button variant="secondary" onClick={() => setResigning(false)}>
+                  {copy.resignNo}
+                </Button>
+              </Popover>
+            ) : null}
+            {challenge ? (
+              <span
+                className={`${styles.puzzleBadge} ${styles[challenge.difficulty]}`}
+              >
+                {copy.thisPuzzle(copy.difficulties[challenge.difficulty])}
+              </span>
+            ) : null}
           </div>
-        ) : null}
-        <p className={styles.status} aria-live="polite">
-          {statusMessage(copy, phase, solved, config.partialCounts)}
-        </p>
-        <section className={styles.rules} aria-label={copy.rulesTitle}>
-          <h2 className={styles.heading}>{copy.rulesTitle}</h2>
+        </Collapsible>
+        <Collapsible title={copy.rulesTitle} defaultOpen>
           <ul className={styles.rulesList}>
             {copy.rules.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-          <Text>{copy.difficultyDetail[difficulty]}</Text>
-        </section>
+          {difficulty ? <Text>{copy.difficultyDetail[difficulty]}</Text> : null}
+        </Collapsible>
+        <Collapsible title={copy.settingsTitle}>
+          <label className={styles.checkLabel}>
+            <input
+              type="checkbox"
+              checked={ghostPairs}
+              onChange={(event) => setGhostPairs(event.target.checked)}
+            />
+            {copy.ghostPairs}
+          </label>
+        </Collapsible>
         {challenge ? (
           <>
-            <div className={styles.controls}>
-              <span className={styles.pill}>
-                {copy.blocksLeft(unusedBlocks(config.copies, board, pending))}
-              </span>
-              <span className={styles.pill}>
-                {copy.guessesLeft(guessesLeft)}
-              </span>
-            </div>
             {config.medianReveal
               ? challenge.revealed.map((color) => (
                   <Text key={color}>{copy.medianClue(copy.colors[color])}</Text>
@@ -840,20 +830,41 @@ const ScaleGame = () => {
                 {copy.staged(pending.length, config.minPlace)}
               </span>
             </div>
-            <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={ghostPairs}
-                onChange={(event) => setGhostPairs(event.target.checked)}
-              />
-              {copy.ghostPairs}
-            </label>
             <p
               className={`${styles.feedback} ${feedback?.good ? styles.good : ""} ${feedback && !feedback.good ? styles.bad : ""}`}
               aria-live="polite"
+              hidden={!feedback}
             >
               {feedback?.text ?? ""}
             </p>
+            {!interactive && phase !== "idle" ? (
+              <section
+                className={styles.answerBlock}
+                aria-label={copy.revealTitle}
+              >
+                <h2 className={styles.heading}>{copy.revealTitle}</h2>
+                <div className={styles.answers}>
+                  {[...COLORS]
+                    .sort(
+                      (left, right) =>
+                        challenge.weights[right] - challenge.weights[left],
+                    )
+                    .map((color) => (
+                      <div
+                        key={color}
+                        className={`${styles.answerBox} ${colorClassName(color)}`}
+                      >
+                        <span className={styles.answerWeight}>
+                          {copy.knownWeight(challenge.weights[color])}
+                        </span>
+                        <span className={styles.answerName}>
+                          {copy.colors[color]}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            ) : null}
             <div className={styles.scales}>
               <ScaleCard
                 title={copy.mainScale}
@@ -900,6 +911,16 @@ const ScaleGame = () => {
                 setGuess((current) => ({ ...current, [color]: value }));
               }}
             />
+            {interactive && solved ? (
+              <div className={styles.controls}>
+                <Button onClick={submitGuess}>{copy.submitGuess}</Button>
+                {config.partialCounts ? (
+                  <Button variant="secondary" onClick={finishPartial}>
+                    {copy.takePartial}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
             <div>
               <label className={styles.label} htmlFor="scale-notes">
                 {copy.notesLabel}
@@ -935,38 +956,6 @@ const ScaleGame = () => {
                   ))}
                 </ol>
               )}
-            </section>
-            <section aria-label={copy.guessTitle}>
-              <h2 className={styles.heading}>{copy.guessTitle}</h2>
-              {interactive && solved ? (
-                <Stack gap={10}>
-                  <Text>{copy.guessHint}</Text>
-                  <div className={styles.controls}>
-                    <Button onClick={submitGuess}>{copy.submitGuess}</Button>
-                    {config.partialCounts ? (
-                      <Button variant="secondary" onClick={finishPartial}>
-                        {copy.takePartial}
-                      </Button>
-                    ) : null}
-                  </div>
-                </Stack>
-              ) : null}
-              {interactive && !solved ? <Text>{copy.guessLocked}</Text> : null}
-              {!interactive && phase !== "idle" ? (
-                <Stack gap={8}>
-                  <h3 className={styles.heading}>{copy.revealTitle}</h3>
-                  <ul className={styles.weights}>
-                    {COLORS.map((color) => (
-                      <li key={color}>
-                        {copy.weightLine(
-                          copy.colors[color],
-                          challenge.weights[color],
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </Stack>
-              ) : null}
             </section>
           </>
         ) : null}

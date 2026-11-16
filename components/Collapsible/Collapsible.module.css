@@ -1,0 +1,57 @@
+.collapsible {
+  border: 1px solid var(--color-black);
+  border-radius: 8px;
+  background: white;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:hover {
+  background: var(--color-light-pink);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: -2px;
+}
+
+.icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  transition: transform 0.15s ease;
+}
+
+.open .icon {
+  transform: rotate(180deg);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
