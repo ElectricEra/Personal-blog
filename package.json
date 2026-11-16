@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "biome check --write ."
   },
   "dependencies": {
     "next": "16.3.3",
@@ -21,11 +21,10 @@
     "swr": "^2.5.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "eslint": "^9.28.0",
-    "eslint-config-next": "16.3.3",
-    "typescript": "^5.8.3"
+    "typescript": "^7.0.2"
   }
 }
