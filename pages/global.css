@@ -1,5 +1,8 @@
 :root {
   --color-black: #0c1421;
+  --color-dark-grey: #212229;
+  --color-grey: #2e2e2e;
+  --color-light-grey: #44454d;
   /* --color-dark-blue: #7286d3; */
   --color-light-blue: #8ea7e9;
   --color-light-purple: #e5e0ff;
@@ -9,6 +12,7 @@
   --color-dark-blue: #3052a0;
 
   --color-yellow: #edcf39;
+  --color-hover: rgb(250, 244, 220);
 
   --my: #3052a0;
 }

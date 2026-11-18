@@ -88,10 +88,14 @@ export const en = {
   notesLabel: "Notes",
   notesPlaceholder: "Write inequalities, equations, and ideas here.",
   submitGuess: "Submit guess",
+  guessDialogTitle: "Check the weights",
+  confirmGuess: "Check weights",
+  cancelGuess: "Cancel",
   staged: (count: number, min: number) => `Staged: ${count} / ${min}`,
   invalidGuess: (min: number, max: number) =>
     `Enter a whole number from ${min} to ${max} for every color.`,
   wrongGuess: "That set is wrong.",
+  correctGuess: "Every weight is correct. Congratulations.",
   takePartial: "Finish with a balance",
   noBlocks: "No copies of that color are left.",
   samePattern:

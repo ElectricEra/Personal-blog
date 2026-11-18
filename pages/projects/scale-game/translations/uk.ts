@@ -99,10 +99,14 @@ export const uk: GameTranslation = {
   notesLabel: "Нотатки",
   notesPlaceholder: "Записуйте нерівності, рівняння й ідеї.",
   submitGuess: "Перевірити вагу",
+  guessDialogTitle: "Перевірити вагу",
+  confirmGuess: "Перевірити",
+  cancelGuess: "Скасувати",
   staged: (count, min) => `Підготовлено: ${count} / ${min}`,
   invalidGuess: (min, max) =>
     `Введіть ціле число від ${min} до ${max} для кожного кольору.`,
   wrongGuess: "Цей набір неправильний.",
+  correctGuess: "Усі ваги правильні. Вітаємо.",
   takePartial: "Завершити з рівновагою",
   noBlocks: "Цього кольору більше немає.",
   samePattern:

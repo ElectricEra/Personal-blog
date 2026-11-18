@@ -445,6 +445,128 @@ const OrderBoard = ({
   );
 };
 
+type GuessDialogProps = {
+  challenge: Challenge;
+  order: Array<Color | null>;
+  values: Record<Color, string>;
+  error: string | null;
+  copy: GameTranslation;
+  onChange: (color: Color, value: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+};
+
+const GuessDialog = ({
+  challenge,
+  order,
+  values,
+  error,
+  copy,
+  onChange,
+  onConfirm,
+  onClose,
+}: GuessDialogProps) => {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const placed = order.filter((color): color is Color => color !== null);
+  const dialogColors = [
+    ...placed,
+    ...COLORS.filter((color) => !placed.includes(color)),
+  ];
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    const field = dialogRef.current?.querySelector<HTMLElement>(
+      "input:not(:disabled)",
+    );
+    (field ?? dialogRef.current)?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCloseRef.current();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocused instanceof HTMLElement) {
+        previouslyFocused.focus();
+      }
+    };
+  }, []);
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <form
+          className={styles.dialogForm}
+          onSubmit={(event) => {
+            event.preventDefault();
+            onConfirm();
+          }}
+        >
+          <h2 id={titleId} className={styles.heading}>
+            {copy.guessDialogTitle}
+          </h2>
+          <ul className={styles.guessList}>
+            {dialogColors.map((color) => (
+              <li key={color} className={styles.guessRow}>
+                <span
+                  className={`${styles.orderChip} ${colorClassName(color)}`}
+                >
+                  {copy.short[color]} {copy.colors[color]}
+                </span>
+                {challenge.revealed.includes(color) ? (
+                  <span className={`${styles.knownGrams} ${styles.guessValue}`}>
+                    {copy.knownWeight(challenge.weights[color])}
+                  </span>
+                ) : (
+                  <input
+                    className={styles.draft}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    aria-label={copy.draftWeight(copy.colors[color])}
+                    value={values[color]}
+                    onChange={(event) =>
+                      onChange(color, event.target.value.replace(/\D/g, ""))
+                    }
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+          <p
+            className={`${styles.feedback} ${styles.bad}`}
+            aria-live="polite"
+            hidden={!error}
+          >
+            {error ?? ""}
+          </p>
+          <div className={`${styles.controls} ${styles.centeredControls}`}>
+            <Button type="submit">{copy.confirmGuess}</Button>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              {copy.cancelGuess}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const ScaleGame = () => {
   const copy = useTranslation(translations);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
@@ -459,6 +581,9 @@ const ScaleGame = () => {
   const [notes, setNotes] = useState("");
   const [guessesLeft, setGuessesLeft] = useState(0);
   const [guess, setGuess] = useState(emptyGuess());
+  const [guessOpen, setGuessOpen] = useState(false);
+  const [dialogGuess, setDialogGuess] = useState(emptyGuess());
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [ghostPairs, setGhostPairs] = useState(false);
@@ -486,6 +611,9 @@ const ScaleGame = () => {
     setNotes("");
     setGuessesLeft(nextConfig.guesses);
     setGuess(guessFromChallenge(next));
+    setGuessOpen(false);
+    setDialogGuess(emptyGuess());
+    setDialogError(null);
     setOrder(orderFromChallenge(next));
     setPicked(null);
     setResigning(false);
@@ -661,18 +789,37 @@ const ScaleGame = () => {
     setFeedback(null);
   };
 
-  const submitGuess = () => {
+  const openGuessDialog = () => {
+    if (!interactive || !solved) {
+      return;
+    }
+    const next = { ...guess };
+    if (challenge) {
+      for (const color of challenge.revealed) {
+        next[color] = String(challenge.weights[color]);
+      }
+    }
+    setDialogGuess(next);
+    setDialogError(null);
+    setGuessOpen(true);
+  };
+
+  const confirmGuess = () => {
     if (!challenge || !interactive || !solved) {
       return;
     }
-    const parsed = parseGuess(guess, config.minWeight, config.maxWeight);
+    const submitted = { ...dialogGuess };
+    for (const color of challenge.revealed) {
+      submitted[color] = String(challenge.weights[color]);
+    }
+    const parsed = parseGuess(submitted, config.minWeight, config.maxWeight);
     if (!parsed) {
-      setFeedback({
-        text: copy.invalidGuess(config.minWeight, config.maxWeight),
-        good: false,
-      });
+      setDialogError(copy.invalidGuess(config.minWeight, config.maxWeight));
       return;
     }
+    setGuess(submitted);
+    setGuessOpen(false);
+    setDialogError(null);
     const correct = guessIsCorrect(challenge.weights, parsed);
     const left = guessesLeft - 1;
     const nextPhase = resultAfterGuess(correct, left, config.partialCounts);
@@ -767,14 +914,16 @@ const ScaleGame = () => {
         </Collapsible>
         {challenge ? (
           <Collapsible title={copy.settingsTitle}>
-            <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={ghostPairs}
-                onChange={(event) => setGhostPairs(event.target.checked)}
-              />
-              {copy.ghostPairs}
-            </label>
+            <div className={styles.settings}>
+              <label className={styles.checkLabel}>
+                <input
+                  type="checkbox"
+                  checked={ghostPairs}
+                  onChange={(event) => setGhostPairs(event.target.checked)}
+                />
+                {copy.ghostPairs}
+              </label>
+            </div>
           </Collapsible>
         ) : null}
         {challenge ? (
@@ -795,6 +944,7 @@ const ScaleGame = () => {
                     )}
               </Text>
             ))}
+            <hr className={styles.separator} />
             <div className={`${styles.controls} ${styles.moveControls}`}>
               <Button
                 onClick={commitMove}
@@ -856,11 +1006,26 @@ const ScaleGame = () => {
             >
               {feedback?.text ?? ""}
             </p>
+            {interactive && solved ? (
+              <div className={`${styles.controls} ${styles.centeredControls}`}>
+                <Button onClick={openGuessDialog}>{copy.submitGuess}</Button>
+                {config.partialCounts ? (
+                  <Button variant="secondary" onClick={finishPartial}>
+                    {copy.takePartial}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
             {!interactive && phase !== "idle" ? (
               <section
                 className={styles.answerBlock}
                 aria-label={copy.revealTitle}
               >
+                {phase === "full" ? (
+                  <p className={`${styles.feedback} ${styles.good}`}>
+                    {copy.correctGuess}
+                  </p>
+                ) : null}
                 <h2 className={styles.heading}>{copy.revealTitle}</h2>
                 <div className={styles.answers}>
                   {[...COLORS]
@@ -917,6 +1082,7 @@ const ScaleGame = () => {
               />
             </div>
             <p className={styles.hint}>{copy.resultNote}</p>
+            <hr className={styles.separator} />
             <OrderBoard
               challenge={challenge}
               order={order}
@@ -930,16 +1096,6 @@ const ScaleGame = () => {
                 setGuess((current) => ({ ...current, [color]: value }));
               }}
             />
-            {interactive && solved ? (
-              <div className={styles.controls}>
-                <Button onClick={submitGuess}>{copy.submitGuess}</Button>
-                {config.partialCounts ? (
-                  <Button variant="secondary" onClick={finishPartial}>
-                    {copy.takePartial}
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
             <div>
               <label className={styles.label} htmlFor="scale-notes">
                 {copy.notesLabel}
@@ -979,6 +1135,21 @@ const ScaleGame = () => {
           </>
         ) : null}
       </Stack>
+      {guessOpen && challenge ? (
+        <GuessDialog
+          challenge={challenge}
+          order={order}
+          values={dialogGuess}
+          error={dialogError}
+          copy={copy}
+          onChange={(color, value) => {
+            setDialogGuess((current) => ({ ...current, [color]: value }));
+            setDialogError(null);
+          }}
+          onConfirm={confirmGuess}
+          onClose={() => setGuessOpen(false)}
+        />
+      ) : null}
     </PageWrapper>
   );
 };
