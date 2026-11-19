@@ -1,15 +1,19 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { FaGear } from "react-icons/fa6";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
 import { BackButton } from "@/components/BackButton/BackButton";
-import { Button } from "@/components/Button/Button";
 import { Collapsible } from "@/components/Collapsible/Collapsible";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher/LanguageSwitcher";
+import { Modal } from "@/components/Modal/Modal";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
+import { PhysicalButton } from "@/components/PhysicalButton/PhysicalButton";
 import { Popover } from "@/components/Popover/Popover";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
+import { Select } from "@/components/Select/Select";
 import { Stack } from "@/components/Stack/Stack";
 import { Text } from "@/components/Text/Text";
+import { cx } from "@/utils/cx";
 import { useTranslation } from "@/utils/i18n";
 
 import {
@@ -94,30 +98,19 @@ const orderFromChallenge = (challenge: Challenge): Array<Color | null> => {
 const slotIsFixed = (challenge: Challenge, index: number) =>
   DIFFICULTIES[challenge.difficulty].medianReveal && index === MIDDLE_SLOT;
 
-const colorClassName = (color: Color) => {
-  if (color === "red") {
-    return styles.red;
-  }
-  if (color === "yellow") {
-    return styles.yellow;
-  }
-  if (color === "green") {
-    return styles.green;
-  }
-  if (color === "blue") {
-    return styles.blue;
-  }
-  return styles.purple;
+const colorClassNames: Record<Color, string> = {
+  red: styles.red,
+  yellow: styles.yellow,
+  green: styles.green,
+  blue: styles.blue,
+  purple: styles.purple,
 };
 
-const tiltClassName = (outcome: ReportedOutcome) => {
-  if (outcome === "left") {
-    return styles.tiltLeft;
-  }
-  if (outcome === "right") {
-    return styles.tiltRight;
-  }
-  return styles.tiltLevel;
+const tiltClassNames: Record<ReportedOutcome, string> = {
+  left: styles.tiltLeft,
+  right: styles.tiltRight,
+  balance: styles.tiltLevel,
+  none: styles.tiltLevel,
 };
 
 const describeAdded = (
@@ -215,7 +208,7 @@ const ScaleCard = ({
   onSelect,
   onRemove,
 }: ScaleCardProps) => {
-  const hintId = useId();
+  const [hintOpen, setHintOpen] = useState(false);
   const pans: Array<{ side: Side; label: string }> = [
     { side: "left", label: copy.leftPan },
     { side: "right", label: copy.rightPan },
@@ -231,25 +224,30 @@ const ScaleCard = ({
     <section className={styles.scaleCard} aria-label={title}>
       <div className={styles.scaleTitle}>
         <h2 className={styles.heading}>{title}</h2>
-        <span className={styles.hintTip}>
-          <button
-            type="button"
-            className={styles.hintButton}
-            aria-label={copy.placeHint}
-            aria-describedby={hintId}
-          >
-            <HiOutlineQuestionMarkCircle aria-hidden />
-          </button>
-          <span id={hintId} role="tooltip" className={styles.hintBubble}>
-            <p className={styles.hint}>{copy.howToPlace}</p>
-          </span>
-        </span>
+        <Popover
+          className={styles.hintTip}
+          panelClassName={styles.hintBubble}
+          open={hintOpen}
+          onOpenChange={setHintOpen}
+          label={copy.placeHint}
+          trigger={
+            <button
+              type="button"
+              className={styles.hintButton}
+              aria-label={copy.placeHint}
+            >
+              <HiOutlineQuestionMarkCircle aria-hidden />
+            </button>
+          }
+        >
+          <p className={styles.hint}>{copy.howToPlace}</p>
+        </Popover>
       </div>
       <p className={styles.outcome} aria-live="polite">
         {copy.outcomes[outcome]}
       </p>
       <div className={styles.stage}>
-        <div className={`${styles.beam} ${tiltClassName(outcome)}`} />
+        <div className={cx(styles.beam, tiltClassNames[outcome])} />
         <div className={styles.base} />
       </div>
       <div className={styles.pans}>
@@ -270,16 +268,17 @@ const ScaleCard = ({
             <div key={side} className={styles.panColumn}>
               <button
                 type="button"
-                className={`${styles.sideButton} ${selected ? styles.sideSelected : ""}`}
+                className={cx(
+                  styles.sideButton,
+                  selected && styles.sideSelected,
+                )}
                 aria-pressed={selected}
                 disabled={!interactive}
                 onClick={() => onSelect(side)}
               >
                 {label}
               </button>
-              <div
-                className={`${styles.pan} ${selected ? styles.panSelected : ""}`}
-              >
+              <div className={cx(styles.pan, selected && styles.panSelected)}>
                 {tokens.map((token) => {
                   const order = seen[token.color];
                   seen[token.color] += 1;
@@ -289,7 +288,12 @@ const ScaleCard = ({
                     <button
                       key={`${token.color}-pending-${token.index}`}
                       type="button"
-                      className={`${styles.token} ${colorClassName(token.color)} ${styles.pendingToken} ${ghost ? styles.ghostToken : ""}`}
+                      className={cx(
+                        styles.token,
+                        colorClassNames[token.color],
+                        styles.pendingToken,
+                        ghost && styles.ghostToken,
+                      )}
                       aria-label={`${copy.removePending(copy.colors[token.color])}${ghostLabel}`}
                       disabled={!interactive}
                       onClick={() => onRemove(side, token.color)}
@@ -299,7 +303,11 @@ const ScaleCard = ({
                   ) : (
                     <span
                       key={`${token.color}-set-${token.index}`}
-                      className={`${styles.token} ${colorClassName(token.color)} ${ghost ? styles.ghostToken : ""}`}
+                      className={cx(
+                        styles.token,
+                        colorClassNames[token.color],
+                        ghost && styles.ghostToken,
+                      )}
                     >
                       <span aria-hidden="true">{copy.short[token.color]}</span>
                       <span className={styles.srOnly}>
@@ -369,7 +377,11 @@ const OrderBoard = ({
   const chip = (color: Color) => (
     <button
       type="button"
-      className={`${styles.orderChip} ${colorClassName(color)} ${picked === color ? styles.orderChipSelected : ""}`}
+      className={cx(
+        styles.orderChip,
+        colorClassNames[color],
+        picked === color && styles.orderChipSelected,
+      )}
       aria-pressed={picked === color}
       aria-label={copy.orderPick(copy.colors[color])}
       disabled={!interactive}
@@ -391,13 +403,18 @@ const OrderBoard = ({
           return (
             <div key={slotKey} className={styles.chainItem}>
               <div
-                className={`${styles.slot} ${color ? styles.slotFilled : ""} ${fixed ? styles.slotFixed : ""} ${picked && !fixed ? styles.slotReady : ""}`}
+                className={cx(
+                  styles.slot,
+                  color && styles.slotFilled,
+                  fixed && styles.slotFixed,
+                  picked && !fixed && styles.slotReady,
+                )}
               >
                 {color ? (
                   <>
                     {fixed ? (
                       <span
-                        className={`${styles.orderChip} ${colorClassName(color)}`}
+                        className={cx(styles.orderChip, colorClassNames[color])}
                       >
                         {copy.short[color]} {copy.colors[color]}
                       </span>
@@ -445,6 +462,90 @@ const OrderBoard = ({
   );
 };
 
+type GuessDialogProps = {
+  challenge: Challenge;
+  order: Array<Color | null>;
+  values: Record<Color, string>;
+  error: string | null;
+  copy: GameTranslation;
+  onChange: (color: Color, value: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+};
+
+const GuessDialog = ({
+  challenge,
+  order,
+  values,
+  error,
+  copy,
+  onChange,
+  onConfirm,
+  onClose,
+}: GuessDialogProps) => {
+  const placed = order.filter((color): color is Color => color !== null);
+  const dialogColors = [
+    ...placed,
+    ...COLORS.filter((color) => !placed.includes(color)),
+  ];
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={copy.guessDialogTitle}
+      closeLabel={copy.close}
+    >
+      <form
+        className={styles.dialogForm}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm();
+        }}
+      >
+        <ul className={styles.guessList}>
+          {dialogColors.map((color) => (
+            <li key={color} className={styles.guessRow}>
+              <span className={cx(styles.orderChip, colorClassNames[color])}>
+                {copy.short[color]} {copy.colors[color]}
+              </span>
+              {challenge.revealed.includes(color) ? (
+                <span className={`${styles.knownGrams} ${styles.guessValue}`}>
+                  {copy.knownWeight(challenge.weights[color])}
+                </span>
+              ) : (
+                <input
+                  className={styles.draft}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label={copy.draftWeight(copy.colors[color])}
+                  value={values[color]}
+                  onChange={(event) =>
+                    onChange(color, event.target.value.replace(/\D/g, ""))
+                  }
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+        <p
+          className={`${styles.feedback} ${styles.bad}`}
+          aria-live="polite"
+          hidden={!error}
+        >
+          {error ?? ""}
+        </p>
+        <div className={`${styles.controls} ${styles.centeredControls}`}>
+          <PhysicalButton type="submit">{copy.confirmGuess}</PhysicalButton>
+          <PhysicalButton type="button" variant="secondary" onClick={onClose}>
+            {copy.cancelGuess}
+          </PhysicalButton>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
 const ScaleGame = () => {
   const copy = useTranslation(translations);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
@@ -459,12 +560,16 @@ const ScaleGame = () => {
   const [notes, setNotes] = useState("");
   const [guessesLeft, setGuessesLeft] = useState(0);
   const [guess, setGuess] = useState(emptyGuess());
+  const [guessOpen, setGuessOpen] = useState(false);
+  const [dialogGuess, setDialogGuess] = useState(emptyGuess());
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [ghostPairs, setGhostPairs] = useState(false);
   const [order, setOrder] = useState<Array<Color | null>>(emptyOrder);
   const [picked, setPicked] = useState<Color | null>(null);
   const [resigning, setResigning] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const informationRef = useRef<HTMLHeadingElement>(null);
 
   const config =
@@ -486,6 +591,9 @@ const ScaleGame = () => {
     setNotes("");
     setGuessesLeft(nextConfig.guesses);
     setGuess(guessFromChallenge(next));
+    setGuessOpen(false);
+    setDialogGuess(emptyGuess());
+    setDialogError(null);
     setOrder(orderFromChallenge(next));
     setPicked(null);
     setResigning(false);
@@ -493,9 +601,13 @@ const ScaleGame = () => {
     setFeedback(null);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run for every new challenge
   useEffect(() => {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     informationRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: reduceMotion ? "auto" : "smooth",
       block: "start",
     });
   }, [challenge]);
@@ -661,18 +773,37 @@ const ScaleGame = () => {
     setFeedback(null);
   };
 
-  const submitGuess = () => {
+  const openGuessDialog = () => {
+    if (!interactive || !solved) {
+      return;
+    }
+    const next = { ...guess };
+    if (challenge) {
+      for (const color of challenge.revealed) {
+        next[color] = String(challenge.weights[color]);
+      }
+    }
+    setDialogGuess(next);
+    setDialogError(null);
+    setGuessOpen(true);
+  };
+
+  const confirmGuess = () => {
     if (!challenge || !interactive || !solved) {
       return;
     }
-    const parsed = parseGuess(guess, config.minWeight, config.maxWeight);
+    const submitted = { ...dialogGuess };
+    for (const color of challenge.revealed) {
+      submitted[color] = String(challenge.weights[color]);
+    }
+    const parsed = parseGuess(submitted, config.minWeight, config.maxWeight);
     if (!parsed) {
-      setFeedback({
-        text: copy.invalidGuess(config.minWeight, config.maxWeight),
-        good: false,
-      });
+      setDialogError(copy.invalidGuess(config.minWeight, config.maxWeight));
       return;
     }
+    setGuess(submitted);
+    setGuessOpen(false);
+    setDialogError(null);
     const correct = guessIsCorrect(challenge.weights, parsed);
     const left = guessesLeft - 1;
     const nextPhase = resultAfterGuess(correct, left, config.partialCounts);
@@ -716,44 +847,58 @@ const ScaleGame = () => {
         {copy.intro}
       </Text>
       <Stack className={styles.game} gap={14}>
-        <Collapsible title={copy.controlsTitle} defaultOpen>
-          <div className={styles.controlStack}>
-            <select
-              id="scale-difficulty"
-              className={styles.select}
-              aria-label={copy.difficultyLabel}
-              value={difficulty}
-              onChange={(event) => {
-                const value = event.target.value;
-                if (isDifficulty(value)) {
-                  setDifficulty(value);
-                }
-              }}
+        <div className={styles.controlRow}>
+          <Select
+            id="scale-difficulty"
+            aria-label={copy.difficultyLabel}
+            value={difficulty}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (isDifficulty(value)) {
+                setDifficulty(value);
+              }
+            }}
+          >
+            {DIFFICULTY_IDS.map((id) => (
+              <option key={id} value={id}>
+                {copy.difficulties[id]}
+              </option>
+            ))}
+          </Select>
+          <PhysicalButton onClick={startGame}>{copy.newGame}</PhysicalButton>
+          {interactive ? (
+            <Popover
+              className={styles.stretchAnchor}
+              open={resigning}
+              onOpenChange={setResigning}
+              label={copy.resignPrompt}
+              trigger={
+                <PhysicalButton variant="secondary">
+                  {copy.resign}
+                </PhysicalButton>
+              }
             >
-              {DIFFICULTY_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {copy.difficulties[id]}
-                </option>
-              ))}
-            </select>
-            <Button onClick={startGame}>{copy.newGame}</Button>
-            {interactive ? (
-              <Popover
-                className={styles.popoverAnchor}
-                open={resigning}
-                onOpenChange={setResigning}
-                label={copy.resignPrompt}
-                trigger={<Button variant="secondary">{copy.resign}</Button>}
+              <p className={styles.resignPrompt}>{copy.resignPrompt}</p>
+              <PhysicalButton onClick={resign}>{copy.resignYes}</PhysicalButton>
+              <PhysicalButton
+                variant="secondary"
+                onClick={() => setResigning(false)}
               >
-                <p className={styles.resignPrompt}>{copy.resignPrompt}</p>
-                <Button onClick={resign}>{copy.resignYes}</Button>
-                <Button variant="secondary" onClick={() => setResigning(false)}>
-                  {copy.resignNo}
-                </Button>
-              </Popover>
-            ) : null}
-          </div>
-        </Collapsible>
+                {copy.resignNo}
+              </PhysicalButton>
+            </Popover>
+          ) : null}
+          <PhysicalButton
+            variant="secondary"
+            className={styles.iconButton}
+            aria-label={copy.settingsTitle}
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(true)}
+          >
+            <FaGear aria-hidden="true" />
+          </PhysicalButton>
+        </div>
         <Collapsible title={copy.rulesTitle} defaultOpen>
           <ul className={styles.rulesList}>
             {copy.rules.map((rule) => (
@@ -765,18 +910,6 @@ const ScaleGame = () => {
             <Text>{copy.difficultyDetail[difficulty]}</Text>
           </div>
         </Collapsible>
-        {challenge ? (
-          <Collapsible title={copy.settingsTitle}>
-            <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={ghostPairs}
-                onChange={(event) => setGhostPairs(event.target.checked)}
-              />
-              {copy.ghostPairs}
-            </label>
-          </Collapsible>
-        ) : null}
         {challenge ? (
           <>
             <h2 ref={informationRef} className={styles.information}>
@@ -795,29 +928,30 @@ const ScaleGame = () => {
                     )}
               </Text>
             ))}
+            <hr className={styles.separator} />
             <div className={`${styles.controls} ${styles.moveControls}`}>
-              <Button
+              <PhysicalButton
                 onClick={commitMove}
                 disabled={
                   !interactive || !canCommit(pending.length, config.minPlace)
                 }
               >
                 {copy.commit}
-              </Button>
-              <Button
+              </PhysicalButton>
+              <PhysicalButton
                 variant="secondary"
                 onClick={undo}
                 disabled={!interactive || pending.length === 0}
               >
                 {copy.undo}
-              </Button>
-              <Button
+              </PhysicalButton>
+              <PhysicalButton
                 variant="secondary"
                 onClick={clearPending}
                 disabled={!interactive || pending.length === 0}
               >
                 {copy.clearPending}
-              </Button>
+              </PhysicalButton>
             </div>
             <div className={styles.inventoryRow}>
               <section aria-label={copy.inventoryLabel}>
@@ -830,7 +964,7 @@ const ScaleGame = () => {
                       <button
                         key={color}
                         type="button"
-                        className={`${styles.block} ${colorClassName(color)}`}
+                        className={cx(styles.block, colorClassNames[color])}
                         disabled={!interactive || remaining[color] <= 0}
                         aria-label={copy.placeBlock(
                           copy.colors[color],
@@ -849,18 +983,47 @@ const ScaleGame = () => {
                 {copy.staged(pending.length, config.minPlace)}
               </span>
             </div>
+            {interactive ? (
+              <p className={cx(styles.hint, styles.placingOn)}>
+                {copy.placingOn(
+                  selected.scale === "main" ? copy.mainScale : copy.secondScale,
+                  selected.side === "left" ? copy.leftPan : copy.rightPan,
+                )}
+              </p>
+            ) : null}
             <p
-              className={`${styles.feedback} ${feedback?.good ? styles.good : ""} ${feedback && !feedback.good ? styles.bad : ""}`}
+              className={cx(
+                styles.feedback,
+                feedback?.good && styles.good,
+                feedback && !feedback.good && styles.bad,
+              )}
               aria-live="polite"
               hidden={!feedback}
             >
               {feedback?.text ?? ""}
             </p>
+            {interactive && solved ? (
+              <div className={`${styles.controls} ${styles.centeredControls}`}>
+                <PhysicalButton onClick={openGuessDialog}>
+                  {copy.submitGuess}
+                </PhysicalButton>
+                {config.partialCounts ? (
+                  <PhysicalButton variant="secondary" onClick={finishPartial}>
+                    {copy.takePartial}
+                  </PhysicalButton>
+                ) : null}
+              </div>
+            ) : null}
             {!interactive && phase !== "idle" ? (
               <section
                 className={styles.answerBlock}
                 aria-label={copy.revealTitle}
               >
+                {phase === "full" ? (
+                  <p className={`${styles.feedback} ${styles.good}`}>
+                    {copy.correctGuess}
+                  </p>
+                ) : null}
                 <h2 className={styles.heading}>{copy.revealTitle}</h2>
                 <div className={styles.answers}>
                   {[...COLORS]
@@ -871,7 +1034,7 @@ const ScaleGame = () => {
                     .map((color) => (
                       <div
                         key={color}
-                        className={`${styles.answerBox} ${colorClassName(color)}`}
+                        className={cx(styles.answerBox, colorClassNames[color])}
                       >
                         <span className={styles.answerWeight}>
                           {copy.knownWeight(challenge.weights[color])}
@@ -917,6 +1080,7 @@ const ScaleGame = () => {
               />
             </div>
             <p className={styles.hint}>{copy.resultNote}</p>
+            <hr className={styles.separator} />
             <OrderBoard
               challenge={challenge}
               order={order}
@@ -930,16 +1094,6 @@ const ScaleGame = () => {
                 setGuess((current) => ({ ...current, [color]: value }));
               }}
             />
-            {interactive && solved ? (
-              <div className={styles.controls}>
-                <Button onClick={submitGuess}>{copy.submitGuess}</Button>
-                {config.partialCounts ? (
-                  <Button variant="secondary" onClick={finishPartial}>
-                    {copy.takePartial}
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
             <div>
               <label className={styles.label} htmlFor="scale-notes">
                 {copy.notesLabel}
@@ -979,6 +1133,36 @@ const ScaleGame = () => {
           </>
         ) : null}
       </Stack>
+      <Modal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title={copy.settingsTitle}
+        closeLabel={copy.close}
+      >
+        <label className={styles.checkLabel}>
+          <input
+            type="checkbox"
+            checked={ghostPairs}
+            onChange={(event) => setGhostPairs(event.target.checked)}
+          />
+          {copy.ghostPairs}
+        </label>
+      </Modal>
+      {guessOpen && challenge ? (
+        <GuessDialog
+          challenge={challenge}
+          order={order}
+          values={dialogGuess}
+          error={dialogError}
+          copy={copy}
+          onChange={(color, value) => {
+            setDialogGuess((current) => ({ ...current, [color]: value }));
+            setDialogError(null);
+          }}
+          onConfirm={confirmGuess}
+          onClose={() => setGuessOpen(false)}
+        />
+      ) : null}
     </PageWrapper>
   );
 };

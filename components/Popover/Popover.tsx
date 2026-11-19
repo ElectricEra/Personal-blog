@@ -25,6 +25,7 @@ type PopoverProps = {
   onOpenChange: (open: boolean) => void;
   label: string;
   className?: string;
+  panelClassName?: string;
 };
 
 export const Popover = ({
@@ -34,6 +35,7 @@ export const Popover = ({
   onOpenChange,
   label,
   className = "",
+  panelClassName = "",
 }: PopoverProps) => {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -93,7 +95,7 @@ export const Popover = ({
           role="dialog"
           aria-label={label}
           tabIndex={-1}
-          className={styles.panel}
+          className={`${styles.panel} ${panelClassName}`}
         >
           {children}
         </div>

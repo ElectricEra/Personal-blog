@@ -27,7 +27,7 @@
 }
 
 .trigger:hover {
-  background: var(--color-light-pink);
+  background: var(--color-hover);
 }
 
 .trigger:focus-visible {
