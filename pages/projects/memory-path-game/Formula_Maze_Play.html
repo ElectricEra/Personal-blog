@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Formula Maze</title>
+<title>Memory Path</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#eaf1ff;background:#0b1221;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px 14px}main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:clamp(28px,5vw,42px)}.sub{color:#a7b5ce;margin:8px 0 22px}.panel{background:#151f32;border:1px solid #33415b;border-radius:18px;padding:20px;box-shadow:0 15px 45px #0003}.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}button,select{font:inherit;color:inherit}button{background:#365ef3;border:1px solid #5a79fd;padding:11px 15px;border-radius:11px;font-weight:650;cursor:pointer}button.secondary{background:#26334b;border-color:#485773}button:disabled{opacity:.45;cursor:not-allowed}select{background:#26334b;border:1px solid #485773;padding:10px;border-radius:9px}.pill{display:inline-block;padding:8px 12px;background:#293650;border-radius:99px;color:#d0defa;font-variant-numeric:tabular-nums}.status{font-weight:700;font-size:19px;min-height:29px}.detail{color:#adbed7;line-height:1.5;min-height:44px;margin:9px 0 18px}.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:490px;margin:0 auto 20px}.cell{aspect-ratio:1;background:#23314b;border:2px solid #425577;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:clamp(28px,6vw,40px);font-weight:800;position:relative;user-select:none;transition:background .12s,transform .12s}.cell.interactive{cursor:pointer}.cell.interactive:hover{background:#304563}.cell.start{border-color:#4cc9a1}.cell.end{border-color:#f7ba58}.cell.selected{background:#2b6e94;border-color:#76d7f7}.cell.selected:after{content:attr(data-step);position:absolute;right:7px;top:5px;font-size:12px;color:white}.cell:disabled{cursor:default}.results{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 16px}.total{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}.path{color:#9db3da;overflow-wrap:anywhere}.feedback{min-height:27px;font-weight:700}.good{color:#5fe2b4}.bad{color:#ffb1aa}.hint{font-size:13px;color:#9aaac4;margin:12px 0 0} .hidden{display:none!important}@media(max-width:500px){.panel{padding:14px}.board{gap:7px}.cell{border-radius:10px}}
 </style>
 </head>
 <body>
 <main>
- <div class="top"><h1>Formula Maze</h1><span class="pill" id="score">Solved: 0</span></div>
+ <div class="top"><h1>Memory Path</h1><span class="pill" id="score">Solved: 0</span></div>
  <p class="sub">Memorize 16 numbers. Then draw a path across the letter board to hit the target sum.</p>
  <section class="panel">
   <div class="controls">

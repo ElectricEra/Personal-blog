@@ -20,8 +20,8 @@ const Projects = () => {
       />
       <Box
         linkUrl="/projects/memory-path-game"
-        title="Формульний лабіринт"
-        description="Запам’ятайте 16 чисел, а потім проведіть шлях літерами так, щоб їхня сума збіглася з ціллю."
+        title="Шлях пам’яті"
+        description="Запам’ятайте шістнадцять чисел, а потім проведіть шлях літерами, який у сумі дає ціль."
       />
       <Box
         linkUrl="/projects/scale-game"
