@@ -29,11 +29,36 @@
   flex: 0 0 auto;
 }
 
-.controlStack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.controlRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: stretch;
   gap: 8px;
+  width: 100%;
+}
+
+.controlRow:has(.stretchAnchor) {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+}
+
+.controlRow > .select,
+.controlRow > button,
+.stretchAnchor > button {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.stretchAnchor {
+  display: flex;
+  min-width: 0;
+}
+
+.controlRow .iconButton {
+  width: 42px;
+  min-width: 42px;
+  height: 100%;
+  padding: 8px;
 }
 
 .resignPrompt {
@@ -61,12 +86,6 @@
 
 .select option {
   color: var(--color-black);
-}
-
-.controlStack > button,
-.controlStack > .select,
-.popoverAnchor {
-  align-self: center;
 }
 
 .notes {
@@ -437,26 +456,20 @@
   opacity: 0.28;
 }
 
-.settings {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-}
-
 .checkLabel {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   gap: 8px;
-  width: fit-content;
   font-weight: 700;
   cursor: pointer;
+  text-align: left;
 }
 
 .checkLabel input {
   width: 18px;
   height: 18px;
-  margin: 0;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
   accent-color: var(--color-dark-blue);
 }
 
@@ -648,32 +661,6 @@ button.orderChip {
   font-weight: 700;
 }
 
-.overlay {
-  position: fixed;
-  z-index: 30;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(12, 20, 33, 0.45);
-}
-
-.dialog {
-  width: min(440px, 100%);
-  max-height: min(90vh, 640px);
-  overflow: auto;
-  padding: 16px;
-  border: 1px solid var(--color-black);
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 16px 40px rgba(12, 20, 33, 0.24);
-}
-
-.dialog:focus {
-  outline: none;
-}
-
 .dialogForm {
   display: flex;
   flex-direction: column;
@@ -736,6 +723,30 @@ button.orderChip {
 }
 
 @media (max-width: 720px) {
+  .controlRow {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .controlRow:has(.stretchAnchor) {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .controlRow > .select {
+    width: auto;
+    min-width: min-content;
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  .controlRow > button,
+  .stretchAnchor > button {
+    padding: 8px 4px;
+    font-size: 13px;
+    line-height: 1.15;
+    overflow: hidden;
+  }
+
   .answers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

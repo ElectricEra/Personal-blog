@@ -1,10 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { FaGear } from "react-icons/fa6";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
 import { BackButton } from "@/components/BackButton/BackButton";
 import { Button } from "@/components/Button/Button";
 import { Collapsible } from "@/components/Collapsible/Collapsible";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher/LanguageSwitcher";
+import { Modal } from "@/components/Modal/Modal";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
 import { Popover } from "@/components/Popover/Popover";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -466,104 +468,66 @@ const GuessDialog = ({
   onConfirm,
   onClose,
 }: GuessDialogProps) => {
-  const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
   const placed = order.filter((color): color is Color => color !== null);
   const dialogColors = [
     ...placed,
     ...COLORS.filter((color) => !placed.includes(color)),
   ];
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    const field = dialogRef.current?.querySelector<HTMLElement>(
-      "input:not(:disabled)",
-    );
-    (field ?? dialogRef.current)?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCloseRef.current();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      if (previouslyFocused instanceof HTMLElement) {
-        previouslyFocused.focus();
-      }
-    };
-  }, []);
-
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className={styles.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
+    <Modal
+      open
+      onClose={onClose}
+      title={copy.guessDialogTitle}
+      closeLabel={copy.close}
+    >
+      <form
+        className={styles.dialogForm}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm();
+        }}
       >
-        <form
-          className={styles.dialogForm}
-          onSubmit={(event) => {
-            event.preventDefault();
-            onConfirm();
-          }}
-        >
-          <h2 id={titleId} className={styles.heading}>
-            {copy.guessDialogTitle}
-          </h2>
-          <ul className={styles.guessList}>
-            {dialogColors.map((color) => (
-              <li key={color} className={styles.guessRow}>
-                <span
-                  className={`${styles.orderChip} ${colorClassName(color)}`}
-                >
-                  {copy.short[color]} {copy.colors[color]}
+        <ul className={styles.guessList}>
+          {dialogColors.map((color) => (
+            <li key={color} className={styles.guessRow}>
+              <span className={`${styles.orderChip} ${colorClassName(color)}`}>
+                {copy.short[color]} {copy.colors[color]}
+              </span>
+              {challenge.revealed.includes(color) ? (
+                <span className={`${styles.knownGrams} ${styles.guessValue}`}>
+                  {copy.knownWeight(challenge.weights[color])}
                 </span>
-                {challenge.revealed.includes(color) ? (
-                  <span className={`${styles.knownGrams} ${styles.guessValue}`}>
-                    {copy.knownWeight(challenge.weights[color])}
-                  </span>
-                ) : (
-                  <input
-                    className={styles.draft}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    aria-label={copy.draftWeight(copy.colors[color])}
-                    value={values[color]}
-                    onChange={(event) =>
-                      onChange(color, event.target.value.replace(/\D/g, ""))
-                    }
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-          <p
-            className={`${styles.feedback} ${styles.bad}`}
-            aria-live="polite"
-            hidden={!error}
-          >
-            {error ?? ""}
-          </p>
-          <div className={`${styles.controls} ${styles.centeredControls}`}>
-            <Button type="submit">{copy.confirmGuess}</Button>
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {copy.cancelGuess}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+              ) : (
+                <input
+                  className={styles.draft}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label={copy.draftWeight(copy.colors[color])}
+                  value={values[color]}
+                  onChange={(event) =>
+                    onChange(color, event.target.value.replace(/\D/g, ""))
+                  }
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+        <p
+          className={`${styles.feedback} ${styles.bad}`}
+          aria-live="polite"
+          hidden={!error}
+        >
+          {error ?? ""}
+        </p>
+        <div className={`${styles.controls} ${styles.centeredControls}`}>
+          <Button type="submit">{copy.confirmGuess}</Button>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {copy.cancelGuess}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
@@ -590,6 +554,7 @@ const ScaleGame = () => {
   const [order, setOrder] = useState<Array<Color | null>>(emptyOrder);
   const [picked, setPicked] = useState<Color | null>(null);
   const [resigning, setResigning] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const informationRef = useRef<HTMLHeadingElement>(null);
 
   const config =
@@ -863,44 +828,52 @@ const ScaleGame = () => {
         {copy.intro}
       </Text>
       <Stack className={styles.game} gap={14}>
-        <Collapsible title={copy.controlsTitle} defaultOpen>
-          <div className={styles.controlStack}>
-            <select
-              id="scale-difficulty"
-              className={styles.select}
-              aria-label={copy.difficultyLabel}
-              value={difficulty}
-              onChange={(event) => {
-                const value = event.target.value;
-                if (isDifficulty(value)) {
-                  setDifficulty(value);
-                }
-              }}
+        <div className={styles.controlRow}>
+          <select
+            id="scale-difficulty"
+            className={styles.select}
+            aria-label={copy.difficultyLabel}
+            value={difficulty}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (isDifficulty(value)) {
+                setDifficulty(value);
+              }
+            }}
+          >
+            {DIFFICULTY_IDS.map((id) => (
+              <option key={id} value={id}>
+                {copy.difficulties[id]}
+              </option>
+            ))}
+          </select>
+          <Button onClick={startGame}>{copy.newGame}</Button>
+          {interactive ? (
+            <Popover
+              className={styles.stretchAnchor}
+              open={resigning}
+              onOpenChange={setResigning}
+              label={copy.resignPrompt}
+              trigger={<Button variant="secondary">{copy.resign}</Button>}
             >
-              {DIFFICULTY_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {copy.difficulties[id]}
-                </option>
-              ))}
-            </select>
-            <Button onClick={startGame}>{copy.newGame}</Button>
-            {interactive ? (
-              <Popover
-                className={styles.popoverAnchor}
-                open={resigning}
-                onOpenChange={setResigning}
-                label={copy.resignPrompt}
-                trigger={<Button variant="secondary">{copy.resign}</Button>}
-              >
-                <p className={styles.resignPrompt}>{copy.resignPrompt}</p>
-                <Button onClick={resign}>{copy.resignYes}</Button>
-                <Button variant="secondary" onClick={() => setResigning(false)}>
-                  {copy.resignNo}
-                </Button>
-              </Popover>
-            ) : null}
-          </div>
-        </Collapsible>
+              <p className={styles.resignPrompt}>{copy.resignPrompt}</p>
+              <Button onClick={resign}>{copy.resignYes}</Button>
+              <Button variant="secondary" onClick={() => setResigning(false)}>
+                {copy.resignNo}
+              </Button>
+            </Popover>
+          ) : null}
+          <Button
+            variant="secondary"
+            className={styles.iconButton}
+            aria-label={copy.settingsTitle}
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(true)}
+          >
+            <FaGear aria-hidden="true" />
+          </Button>
+        </div>
         <Collapsible title={copy.rulesTitle} defaultOpen>
           <ul className={styles.rulesList}>
             {copy.rules.map((rule) => (
@@ -912,20 +885,6 @@ const ScaleGame = () => {
             <Text>{copy.difficultyDetail[difficulty]}</Text>
           </div>
         </Collapsible>
-        {challenge ? (
-          <Collapsible title={copy.settingsTitle}>
-            <div className={styles.settings}>
-              <label className={styles.checkLabel}>
-                <input
-                  type="checkbox"
-                  checked={ghostPairs}
-                  onChange={(event) => setGhostPairs(event.target.checked)}
-                />
-                {copy.ghostPairs}
-              </label>
-            </div>
-          </Collapsible>
-        ) : null}
         {challenge ? (
           <>
             <h2 ref={informationRef} className={styles.information}>
@@ -1135,6 +1094,21 @@ const ScaleGame = () => {
           </>
         ) : null}
       </Stack>
+      <Modal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title={copy.settingsTitle}
+        closeLabel={copy.close}
+      >
+        <label className={styles.checkLabel}>
+          <input
+            type="checkbox"
+            checked={ghostPairs}
+            onChange={(event) => setGhostPairs(event.target.checked)}
+          />
+          {copy.ghostPairs}
+        </label>
+      </Modal>
       {guessOpen && challenge ? (
         <GuessDialog
           challenge={challenge}

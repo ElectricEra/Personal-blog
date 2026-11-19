@@ -1,0 +1,49 @@
+.overlay {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(12, 20, 33, 0.45);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.backdrop:focus-visible {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: -4px;
+}
+
+.dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 100%);
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--color-black);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 16px 40px rgba(12, 20, 33, 0.24);
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.2rem;
+}
