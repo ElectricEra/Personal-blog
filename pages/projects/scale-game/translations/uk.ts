@@ -30,7 +30,6 @@ export const uk: GameTranslation = {
     hard: "Вага від 1 до 20, усі різні. Відкрито один колір. По вісім копій кожного кольору. Щонайменше 3 блоки за хід. Одна спроба назвати вагу. Перемагає лише повністю правильна відповідь.",
   },
   newGame: "Нова задача",
-  thisPuzzle: (name) => `Ця задача: ${name}`,
   rulesTitle: "Правила",
   startingTitle: "Початкова інформація",
   settingsTitle: "Налаштування",
@@ -46,7 +45,6 @@ export const uk: GameTranslation = {
     "На важкому рівні успіх лише тоді, коли кожна вага правильна.",
   ],
   inventoryLabel: "Блоки",
-  remaining: (count) => `залишилось ${count}`,
   knownWeight: (weight) => `${weight} г`,
   medianClue: (color, weight) =>
     `${color} важить ${weight} г і є третім за вагою. Два кольори легші і два важчі.`,

@@ -41,7 +41,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
 }
 
-.controlRow > .select,
+.controlRow > select,
 .controlRow > button,
 .stretchAnchor > button {
   width: 100%;
@@ -69,35 +69,21 @@
   font-weight: 700;
 }
 
-.select,
 .notes {
+  width: 100%;
+  min-height: 120px;
+  margin-top: 6px;
   padding: 8px 10px;
   border: 1px solid var(--color-black);
   border-radius: 4px;
   background: white;
   color: inherit;
   font: inherit;
-}
-
-.select {
-  min-width: 200px;
-  padding: 8px 16px;
-}
-
-.select option {
-  color: var(--color-black);
-}
-
-.notes {
-  width: 100%;
-  min-height: 120px;
-  margin-top: 6px;
   resize: vertical;
   line-height: 1.5;
 }
 
-.notes:focus,
-.select:focus {
+.notes:focus {
   outline: 2px solid var(--color-dark-blue);
   outline-offset: 1px;
 }
@@ -109,32 +95,6 @@
   border-radius: 99px;
   background: white;
   font-variant-numeric: tabular-nums;
-}
-
-.puzzleBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  min-width: 200px;
-  padding: 8px 16px;
-  border: 1px solid var(--color-black);
-  border-radius: 16px;
-  color: var(--color-black);
-  font: inherit;
-  text-align: center;
-}
-
-.easy {
-  background: #7dce82;
-}
-
-.normal {
-  background: var(--color-yellow);
-}
-
-.hard {
-  background: #f07a7a;
 }
 
 .rulesList {
@@ -185,11 +145,6 @@
   gap: 6px;
 }
 
-.hintTip {
-  position: relative;
-  display: inline-flex;
-}
-
 .hintButton {
   display: inline-flex;
   padding: 0;
@@ -198,7 +153,7 @@
   color: var(--color-dark-blue);
   font-size: 1.35rem;
   line-height: 1;
-  cursor: help;
+  cursor: pointer;
 }
 
 .hintButton:focus-visible {
@@ -207,37 +162,19 @@
   outline-offset: 2px;
 }
 
-.hintBubble {
-  position: absolute;
+/* Two-class selector so it outranks the Popover panel's centered layout. */
+.hintTip .hintBubble {
   top: calc(100% + 6px);
   left: 0;
-  z-index: 3;
-  display: none;
   width: max-content;
   max-width: min(280px, 70vw);
   padding: 8px 10px;
-  border: 1px solid var(--color-black);
   border-radius: 8px;
-  background: white;
-  color: var(--color-black);
   font-size: 0.9rem;
-  font-weight: 400;
   line-height: 1.45;
   text-align: left;
   box-shadow: 0 4px 12px rgb(12 20 33 / 12%);
-}
-
-.hintBubble p {
-  margin: 0;
-}
-
-.hintBubble p + p {
-  margin-top: 6px;
-}
-
-.hintTip:hover .hintBubble,
-.hintTip:focus-within .hintBubble {
-  display: block;
+  transform: none;
 }
 
 .hint {
@@ -251,6 +188,10 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+}
+
+.placingOn {
+  text-align: center;
 }
 
 .inventory {
@@ -657,10 +598,6 @@ button.orderChip {
   line-height: 1.45;
 }
 
-.knownGrams {
-  font-weight: 700;
-}
-
 .dialogForm {
   display: flex;
   flex-direction: column;
@@ -732,10 +669,10 @@ button.orderChip {
     grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
   }
 
-  .controlRow > .select {
+  .controlRow > select {
     width: auto;
     min-width: min-content;
-    padding-inline: 8px;
+    padding-left: 8px;
     font-size: 14px;
   }
 

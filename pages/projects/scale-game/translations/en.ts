@@ -16,7 +16,6 @@ export const en = {
     hard: "Weights from 1 to 20, all different. One color revealed. Eight copies of each color. Place at least 3 blocks per move. One guess. Only a correct guess wins.",
   },
   newGame: "New puzzle",
-  thisPuzzle: (name: string) => `This puzzle: ${name}`,
   rulesTitle: "Rules",
   startingTitle: "Starting information",
   settingsTitle: "Settings",
@@ -32,7 +31,6 @@ export const en = {
     "On Hard, the round is a success only when every weight is correct.",
   ],
   inventoryLabel: "Blocks",
-  remaining: (count: number) => `${count} left`,
   knownWeight: (weight: number) => `${weight} g`,
   medianClue: (color: string, weight: number) =>
     `${color} weighs ${weight} g and is third by weight. Two colors are lighter and two are heavier.`,
