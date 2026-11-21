@@ -1,0 +1,35 @@
+.bar {
+  display: contents;
+}
+
+.title {
+  display: none;
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-light-grey);
+}
+
+/* Keep in sync with the right-bar breakpoint in pages/app.module.css. */
+@media screen and (min-width: 1100px) {
+  .bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: var(--right-bar-width);
+    padding: 24px 16px;
+    overflow-y: auto;
+    background: white;
+    border-left: 1px solid var(--color-light-purple);
+  }
+
+  .title {
+    display: block;
+  }
+}

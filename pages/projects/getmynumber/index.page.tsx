@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { BackButton } from "@/components/BackButton/BackButton";
 import { ExternalLink } from "@/components/ExternalLink/ExternalLink";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
 import { Stack } from "@/components/Stack/Stack";
@@ -38,7 +37,6 @@ const GetMyNumber = () => {
 
   return (
     <PageWrapper fullScreen>
-      <BackButton href="/projects" text="Назад" />
       <Stack gap={16}>
         <Text>
           Одного разу, переглядаючи різні меми, натрапив на цікаву річ. Один з

@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { FaGear } from "react-icons/fa6";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
-import { BackButton } from "@/components/BackButton/BackButton";
 import { Collapsible } from "@/components/Collapsible/Collapsible";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher/LanguageSwitcher";
 import { Modal } from "@/components/Modal/Modal";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
 import { PhysicalButton } from "@/components/PhysicalButton/PhysicalButton";
 import { Popover } from "@/components/Popover/Popover";
+import { RightBar } from "@/components/RightBar/RightBar";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { Select } from "@/components/Select/Select";
 import { Stack } from "@/components/Stack/Stack";
@@ -570,8 +569,6 @@ const ScaleGame = () => {
   const [picked, setPicked] = useState<Color | null>(null);
   const [resigning, setResigning] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const informationRef = useRef<HTMLHeadingElement>(null);
-
   const config =
     DIFFICULTIES[challenge?.difficulty ?? (difficulty || "normal")];
   const solved = challenge
@@ -600,17 +597,6 @@ const ScaleGame = () => {
     setPhase("playing");
     setFeedback(null);
   };
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run for every new challenge
-  useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    informationRef.current?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "start",
-    });
-  }, [challenge]);
 
   const fixedColor =
     challenge && config.medianReveal ? (challenge.revealed[0] ?? null) : null;
@@ -838,42 +824,39 @@ const ScaleGame = () => {
 
   return (
     <PageWrapper fullScreen>
-      <div className={styles.topBar}>
-        <BackButton href="/projects" text={copy.back} />
-        <LanguageSwitcher />
-      </div>
       <SectionHeader>{copy.title}</SectionHeader>
       <Text className={styles.intro} align="center">
         {copy.intro}
       </Text>
       <Stack className={styles.game} gap={14}>
-        <div className={styles.controlRow}>
-          <Select
-            id="scale-difficulty"
-            aria-label={copy.difficultyLabel}
-            value={difficulty}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (isDifficulty(value)) {
-                setDifficulty(value);
-              }
-            }}
-          >
-            {DIFFICULTY_IDS.map((id) => (
-              <option key={id} value={id}>
-                {copy.difficulties[id]}
-              </option>
-            ))}
-          </Select>
-          <PhysicalButton onClick={startGame}>{copy.newGame}</PhysicalButton>
-          {interactive ? (
+        <RightBar title={copy.controlsTitle}>
+          <div className={styles.controlRow}>
+            <Select
+              id="scale-difficulty"
+              aria-label={copy.difficultyLabel}
+              value={difficulty}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (isDifficulty(value)) {
+                  setDifficulty(value);
+                }
+              }}
+            >
+              {DIFFICULTY_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {copy.difficulties[id]}
+                </option>
+              ))}
+            </Select>
+            <PhysicalButton onClick={startGame}>{copy.newGame}</PhysicalButton>
             <Popover
               className={styles.stretchAnchor}
-              open={resigning}
+              panelClassName={styles.resignPanel}
+              open={interactive && resigning}
               onOpenChange={setResigning}
               label={copy.resignPrompt}
               trigger={
-                <PhysicalButton variant="secondary">
+                <PhysicalButton variant="secondary" disabled={!interactive}>
                   {copy.resign}
                 </PhysicalButton>
               }
@@ -887,18 +870,19 @@ const ScaleGame = () => {
                 {copy.resignNo}
               </PhysicalButton>
             </Popover>
-          ) : null}
-          <PhysicalButton
-            variant="secondary"
-            className={styles.iconButton}
-            aria-label={copy.settingsTitle}
-            aria-haspopup="dialog"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
-          >
-            <FaGear aria-hidden="true" />
-          </PhysicalButton>
-        </div>
+            <PhysicalButton
+              variant="secondary"
+              className={styles.iconButton}
+              aria-label={copy.settingsTitle}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen(true)}
+            >
+              <FaGear aria-hidden="true" />
+              <span className={styles.settingsText}>{copy.settingsTitle}</span>
+            </PhysicalButton>
+          </div>
+        </RightBar>
         <Collapsible title={copy.rulesTitle} defaultOpen>
           <ul className={styles.rulesList}>
             {copy.rules.map((rule) => (
@@ -912,9 +896,8 @@ const ScaleGame = () => {
         </Collapsible>
         {challenge ? (
           <>
-            <h2 ref={informationRef} className={styles.information}>
-              {copy.yourInformation}
-            </h2>
+            <hr className={styles.separator} />
+            <h2 className={styles.information}>{copy.informationTitle}</h2>
             {challenge.revealed.map((color) => (
               <Text key={color}>
                 {config.medianReveal
@@ -929,6 +912,7 @@ const ScaleGame = () => {
               </Text>
             ))}
             <hr className={styles.separator} />
+            <h2 className={styles.information}>{copy.playZoneTitle}</h2>
             <div className={`${styles.controls} ${styles.moveControls}`}>
               <PhysicalButton
                 onClick={commitMove}
@@ -1081,6 +1065,7 @@ const ScaleGame = () => {
             </div>
             <p className={styles.hint}>{copy.resultNote}</p>
             <hr className={styles.separator} />
+            <h2 className={styles.information}>{copy.notesZoneTitle}</h2>
             <OrderBoard
               challenge={challenge}
               order={order}

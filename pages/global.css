@@ -14,8 +14,14 @@
   --color-yellow: #edcf39;
   --color-hover: rgb(250, 244, 220);
   --color-hover-primary: rgb(213, 186, 51);
+  --color-edge: #8f6b16;
+  --color-lip: #c6a01c;
+  --color-lip-secondary: #e0bc34;
 
   --my: #3052a0;
+
+  --side-menu-width: 220px;
+  --right-bar-width: 240px;
 }
 
 * {
@@ -29,11 +35,8 @@ html {
 }
 
 body {
-  max-width: 980px;
-  margin: 0 auto;
-  background-color: var(--color-yellow);
+  background-color: white;
   overflow-y: overlay;
-  padding: 0 15px;
 }
 
 .main {

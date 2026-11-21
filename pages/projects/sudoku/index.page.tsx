@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { BackButton } from "@/components/BackButton/BackButton";
 import { Button } from "@/components/Button/Button";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -236,7 +235,6 @@ const Sudoku = () => {
 
   return (
     <PageWrapper fullScreen>
-      <BackButton href="/projects" text="Назад" />
       <SectionHeader>Судоку</SectionHeader>
       <Text className={styles.intro} align="center">
         Заповни сітку так, щоб кожна цифра від 1 до 9 зустрічалась лише раз у

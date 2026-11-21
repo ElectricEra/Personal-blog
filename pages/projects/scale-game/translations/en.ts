@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   title: "Scale Game",
   intro:
     "Five colors hide their weights. Spend a limited set of blocks on two scales, then deduce every number.",
@@ -19,6 +18,7 @@ export const en = {
   rulesTitle: "Rules",
   startingTitle: "Starting information",
   settingsTitle: "Settings",
+  controlsTitle: "Game",
   rules: [
     "Each color has one hidden whole-number weight. Every copy of that color weighs the same.",
     "A scale only shows which side is heavier, or that the pans balance. It never shows grams.",
@@ -72,7 +72,9 @@ export const en = {
   ghostPairs: "Ghost blocks that have a match on the other pan",
   ghostedBlock: "cancels",
   orderTitle: "Assumed order",
-  yourInformation: "Your information",
+  informationTitle: "Starting information",
+  playZoneTitle: "Play zone",
+  notesZoneTitle: "Notes",
   orderHint:
     "Heavier on the left. Select a color, then a position. Select a placed color again to take it out. Write any weight you have worked out.",
   orderMiddle: "Known middle weight",
