@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaGear } from "react-icons/fa6";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
@@ -547,6 +547,8 @@ const GuessDialog = ({
 
 const ScaleGame = () => {
   const copy = useTranslation(translations);
+  const informationRef = useRef<HTMLHeadingElement>(null);
+  const pendingScroll = useRef(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [board, setBoard] = useState<Board>(emptyBoard());
@@ -577,6 +579,20 @@ const ScaleGame = () => {
   const interactive = phase === "playing";
   const remaining = copiesLeft(config.copies, board, pending);
 
+  useEffect(() => {
+    if (!challenge || !pendingScroll.current || !informationRef.current) {
+      return;
+    }
+    pendingScroll.current = false;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    informationRef.current.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }, [challenge]);
+
   const startGame = () => {
     const next = createChallenge(difficulty);
     const nextConfig = DIFFICULTIES[difficulty];
@@ -596,6 +612,7 @@ const ScaleGame = () => {
     setResigning(false);
     setPhase("playing");
     setFeedback(null);
+    pendingScroll.current = true;
   };
 
   const fixedColor =
@@ -897,7 +914,9 @@ const ScaleGame = () => {
         {challenge ? (
           <>
             <hr className={styles.separator} />
-            <h2 className={styles.information}>{copy.informationTitle}</h2>
+            <h2 ref={informationRef} className={styles.information}>
+              {copy.informationTitle}
+            </h2>
             {challenge.revealed.map((color) => (
               <Text key={color}>
                 {config.medianReveal

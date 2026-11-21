@@ -48,7 +48,7 @@ Patterns to reuse:
 
 - **Configure first, then play.** Before the first game, the page shows only the controls and the rules. The game area appears after "New puzzle", so a first-time visitor is not faced with an empty board.
 - **Rules open by default, but collapsible.** New players see them right away. Returning players close them with one click. The panel below the rules repeats the parameters of the *selected* difficulty, so changing the select gives an immediate preview of what changes.
-- **Don't move the page for the player.** Starting a new puzzle does not scroll. The new content appears below the rules, and the player scrolls when they are ready. With the controls pinned in the right bar, there is no need to jump away from them to reach the board.
+- **Scroll to Information when a round starts.** "New puzzle" brings the Information heading to the top of the window. The scroll runs only for that press: the click handler sets a ref, and an effect that depends on the new round reads it and clears it. Later updates, such as a timer tick or a move, do not move the page. The call is `scrollIntoView({ behavior: "smooth", block: "start" })`. The heading has `scroll-margin-top: 16px`, and `72px` at `768px` and below, so the sticky mobile menu does not cover it. When `prefers-reduced-motion: reduce` matches, the behavior is `"auto"`, an instant jump.
 - **Separators group the zones.** Light `<hr>`s mark where the game area starts (above "Your information") and split it into "facts", "actions and board", and "your reasoning". There are no nested cards for this, which keeps the visual weight low.
 
 ---
@@ -298,4 +298,4 @@ const colorClassNames: Record<Color, string> = {
 className={cx(styles.slot, color && styles.slotFilled, picked && !fixed && styles.slotReady)}
 ```
 
-- **Respect `prefers-reduced-motion`.** The button press, the drawer slide, and the backdrop fade are turned off by a `prefers-reduced-motion: reduce` media query. The beam tilt does not have one yet. If you add motion started from JS (`scrollIntoView`, `element.animate`), check `window.matchMedia("(prefers-reduced-motion: reduce)")` there as well, because CSS can't reach it.
+- **Respect `prefers-reduced-motion`.** The button press, the drawer slide, and the backdrop fade are turned off by a `prefers-reduced-motion: reduce` media query. The beam tilt does not have one yet. CSS cannot see motion started from JS. The scroll to Information checks `window.matchMedia("(prefers-reduced-motion: reduce)")` and uses `behavior: "auto"` when it matches. Do the same for any new `scrollIntoView` or `element.animate`.
