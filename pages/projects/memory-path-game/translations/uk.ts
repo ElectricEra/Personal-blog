@@ -1,7 +1,6 @@
 import type { GameTranslation } from "./en";
 
 export const uk: GameTranslation = {
-  back: "Назад",
   title: "Формульний лабіринт",
   intro:
     "Запам’ятайте 16 чисел. Потім проведіть шлях літерами так, щоб їхні числа дали цільову суму.",

@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   title: "Formula Maze",
   intro:
     "Memorize 16 numbers. Then draw a path across the letter board to hit the target sum.",

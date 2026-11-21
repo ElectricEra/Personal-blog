@@ -7,19 +7,33 @@ Files covered:
 - `pages/projects/scale-game/index.page.tsx` — page layout and interaction wiring
 - `pages/projects/scale-game/index.module.css` — page styles
 - `pages/projects/scale-game/translations/*` — copy
-- Shared components: `PhysicalButton`, `Popover`, `Modal`, `Collapsible`, `Select`, `PageWrapper`, `SectionHeader`, `Stack`, `Text`, `BackButton`, `LanguageSwitcher`
+- Shared components: `RightBar`, `PhysicalButton`, `Popover`, `Modal`, `Collapsible`, `Select`, `PageWrapper`, `SectionHeader`, `Stack`, `Text`
+- Site shell (shared by every page): `SideMenu` and the layout in `pages/_app.page.tsx` / `pages/app.module.css`
 
 ---
 
 ## 1. Page structure
 
-The page is one vertical column. The order follows what the player needs from top to bottom:
+### The site shell
 
-1. **Top bar**: back link on the left, language switcher on the right (`.topBar`, `space-between`).
-2. **Title and one-sentence intro**, centered, intro capped at `640px` so the line length stays readable.
-3. **Control row**: difficulty select, "New puzzle", "Resign" (only while playing), settings gear.
-4. **Rules** in a `Collapsible` that is open by default. Below the rules there is a "Starting information" block that changes with the selected difficulty.
-5. **Game area**, rendered only after a game starts:
+Every page sits in the same three-column shell:
+
+| Column | Component | Shown |
+| --- | --- | --- |
+| Left | `SideMenu` (rendered once from `_app`) | Always. Becomes a slide-out drawer at `768px` and below |
+| Center | The page itself, max `980px`, centered in the space left over | Always |
+| Right | `RightBar` (placed by the page) | Only at `1100px` and wider |
+
+The left menu holds site navigation (the site name links home, then **Games** and **Projects** sections) and the language switcher. Because navigation and language live in the shell, game pages have no top bar or back button of their own.
+
+### The game page
+
+The center column is one vertical column. The order follows what the player needs from top to bottom:
+
+1. **Title and one-sentence intro**, centered, intro capped at `640px` so the line length stays readable.
+2. **Game controls**: difficulty select, "New puzzle", "Resign", settings. On desktop they live in the right bar under a small "Game" heading. Below `1100px` the same markup renders inline as a row under the intro.
+3. **Rules** in a `Collapsible` that is open by default. Below the rules there is a "Starting information" block that changes with the selected difficulty.
+4. **Game area**, rendered only after a game starts:
    - known facts ("Your information")
    - action buttons (Commit / Undo / Clear)
    - inventory and staged counter
@@ -34,27 +48,43 @@ Patterns to reuse:
 
 - **Configure first, then play.** Before the first game, the page shows only the controls and the rules. The game area appears after "New puzzle", so a first-time visitor is not faced with an empty board.
 - **Rules open by default, but collapsible.** New players see them right away. Returning players close them with one click. The panel below the rules repeats the parameters of the *selected* difficulty, so changing the select gives an immediate preview of what changes.
-- **Scroll to the new content.** When a new challenge is created, the page scrolls to the "Your information" heading. The scroll is smooth unless the user has asked for reduced motion. `scroll-margin-top` keeps the heading from touching the viewport edge.
-
-```tsx
-useEffect(() => {
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  informationRef.current?.scrollIntoView({
-    behavior: reduceMotion ? "auto" : "smooth",
-    block: "start",
-  });
-}, [challenge]);
-```
-
-```css
-.information { scroll-margin-top: 16px; }
-```
-
-- **Separators group the zones.** Light `<hr>`s split the page into "facts and actions", "board", and "your reasoning". There are no nested cards for this, which keeps the visual weight low.
+- **Don't move the page for the player.** Starting a new puzzle does not scroll. The new content appears below the rules, and the player scrolls when they are ready. With the controls pinned in the right bar, there is no need to jump away from them to reach the board.
+- **Separators group the zones.** Light `<hr>`s mark where the game area starts (above "Your information") and split it into "facts", "actions and board", and "your reasoning". There are no nested cards for this, which keeps the visual weight low.
 
 ---
 
-## 2. Staged actions: draft, then commit
+## 2. Side bars
+
+### Left menu (`SideMenu`)
+
+- **Fixed, not scrolling with the page.** The menu is `position: fixed` to the left edge of the window, full height. The site name stays at the top and the language switcher at the bottom. Only the middle part (the sections and their links) scrolls, via `flex: 1; min-height: 0; overflow-y: auto`.
+- **Grouped links with small headings.** Each section is a `<section aria-labelledby>` with a small uppercase grey heading. Sections are data (`SECTIONS` in `SideMenu.tsx`), so adding a page is one entry plus its translated name.
+- **Current page is marked twice**: a yellow pill (`.active`) for sighted users and `aria-current="page"` for assistive tech.
+- **Mobile drawer at `768px` and below.** A sticky top bar shows a menu button and the site name. The button slides the menu in from the left over a dimmed backdrop. It closes from the ✕ button, the backdrop, Escape, or picking a link, and also on any route change. While it is open, body scroll is locked. Focus moves to the close button on open and back to the menu button on close.
+- **Hidden means hidden.** The closed drawer and its backdrop use `visibility: hidden` (with the visibility change delayed until the slide finishes), so their links are out of the tab order and the accessibility tree, not just off-screen.
+
+```css
+.menu { visibility: hidden; transform: translateX(-100%);
+  transition: transform 0.25s ease, visibility 0s linear 0.25s; }
+.open { visibility: visible; transform: none;
+  transition: transform 0.25s ease; }
+```
+
+### Right bar (`RightBar`)
+
+- **Desktop only, without duplicate markup.** The page renders its controls once, wrapped in `<RightBar title="…">`. At `1100px` and wider the bar is a fixed panel on the right edge. Below that it is `display: contents`, so it adds no box and the controls render inline where the bar was placed. Its heading is hidden there too.
+- **The layout makes room only when needed.** The center column gets a right margin through `:has()`, so pages without a right bar keep the full width:
+
+```css
+.content:has([data-right-bar]) { margin-right: var(--right-bar-width); }
+```
+
+- **The page decides how its controls stack.** The bar only positions itself. The Scale game adds a `min-width: 1100px` rule that turns the control row into one column, shows a "Settings" label next to the gear, and fits the Resign popover to the bar's width so it cannot run off the screen edge.
+- **The breakpoint is repeated** in `RightBar.module.css`, `app.module.css`, and the page's own CSS. Change all three together.
+
+---
+
+## 3. Staged actions: draft, then commit
 
 The main interaction is a two-step transaction. The player builds a move from several placements, then commits it. Only committed state produces results.
 
@@ -70,7 +100,7 @@ This pattern works anywhere a user builds a batch before applying it: bulk edits
 
 ---
 
-## 3. Select a target, then act
+## 4. Select a target, then act
 
 Placing a block takes two steps: choose a pan (target), then press a color (item). The selected target stays selected, so several blocks can go to the same pan quickly.
 
@@ -90,7 +120,7 @@ Tap-to-pick works the same with mouse, touch, and keyboard, and needs no drag li
 
 ---
 
-## 4. Feedback
+## 5. Feedback
 
 Feedback is spread across a few places, each with its own job:
 
@@ -114,7 +144,7 @@ Details worth copying:
 
 ---
 
-## 5. Scaffolding for the user's own thinking
+## 6. Scaffolding for the user's own thinking
 
 The page includes tools that don't affect the game state. They help the player think:
 
@@ -129,7 +159,7 @@ Generalized: if a task needs reasoning, give the user a place to keep their reas
 
 ---
 
-## 6. Escalating weight of confirmation
+## 7. Escalating weight of confirmation
 
 Different actions use different confirmation surfaces, matched to how much is at stake:
 
@@ -148,17 +178,24 @@ Details:
 - **Known values are shown as text, not as locked inputs.** If a value is given, it appears as "7 g", not as a disabled field.
 - **The context-dependent CTA appears only when it is valid.** "Submit guess" exists only once the puzzle state allows it. It is not shown as a disabled button the rest of the time.
 
-Disabled versus hidden, in short: actions that are part of the normal loop (Commit, Undo, Clear, inventory) stay visible and are disabled when they don't apply, so the layout stays stable and the player learns where they are. Milestone actions (Submit guess, Resign during play) appear only when they apply, so their appearance is itself a signal.
+- **The Resign popover can only be open during a game.** It is controlled with `open={interactive && resigning}`, so if the game ends while it is open, it closes on its own.
+
+Disabled versus hidden, in short:
+
+- **Disabled:** standing controls and actions in the normal loop (Resign, Commit, Undo, Clear, inventory). They stay visible and are disabled when they don't apply, so the layout stays stable and the player learns where things are. Resign is always in the controls and is disabled until a game is running.
+- **Hidden:** milestone actions (Submit guess, Finish with partial). They appear only when they apply, so their appearance is itself a signal.
 
 ---
 
-## 7. Shared components and what they encode
+## 8. Shared components and what they encode
 
 ### `PhysicalButton`
 
-A button that looks pressable: a solid offset shadow (`box-shadow: 0 4px 0 black`) that shrinks while the button moves down on `:active`.
+A button that looks pressable: a solid offset "lip" under the button (`box-shadow: 0 var(--depth) 0 var(--lip)`) that shrinks while the button moves down on `:active`.
 
 - `--depth` / `--pressed-depth` custom properties control the effect.
+- The border and lip use the gold tokens from `global.css` (`--color-edge`, `--color-lip`, `--color-lip-secondary`) rather than black. `Select` uses the same tokens and the same press effect, so the select and the buttons in the control row read as one set.
+- It has `min-width: 200px`. Inside narrow containers (the right bar, the Resign popover), set `min-width: 0` so it can shrink to fit.
 - `[aria-expanded="true"]` also shows the pressed state, so a button that opened a popover stays visibly "down" while the popover is open.
 - Two variants: `primary` (brand yellow) and `secondary` (white). Each screen has one primary action, and the rest are secondary.
 - `prefers-reduced-motion` turns off the movement transition.
@@ -184,43 +221,49 @@ Don't use a CSS-only `:hover` / `:focus-within` tooltip for content that matters
 
 ---
 
-## 8. Responsive layout
+## 9. Responsive layout
 
 - **Grid with `minmax(0, 1fr)`** everywhere (`.controlRow`, `.scales`, `.pans`, `.answers`) so long labels shrink and wrap instead of overflowing.
-- **`:has()` changes the grid based on its content.** The control row gets an extra column only when the Resign popover is present:
+- **Breakpoints:**
 
-```css
-.controlRow { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
-.controlRow:has(.stretchAnchor) { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
-```
+| Width | What changes |
+| --- | --- |
+| `1100px` and wider | Controls move into the right bar and stack in one column. The settings button shows its label. |
+| `721px` to `1099px` | Controls are an inline row: select, New puzzle, Resign, and an icon-only settings button. |
+| `768px` and below | The left menu becomes a drawer behind a menu button (site shell). |
+| `720px` and below | The two scales stack, the reveal grid goes from 5 to 3 columns, the control row tightens (smaller font, the select sized to its content), and button groups center. |
 
+- **A stable control row.** Because Resign is always rendered (disabled outside a game), the row always has the same columns: three equal text columns and one for the icon button (`repeat(3, minmax(0, 1fr)) auto`). The row does not reflow when a game starts.
 - **The icon-only button gets a fixed square column** (`auto`, `42px` wide). The text buttons share the remaining space equally.
 - **Wrapper elements must pass size through.** The popover root (`.stretchAnchor`) is made `display: flex; min-width: 0` so the button inside can fill its grid cell like its siblings.
-- **One breakpoint at `720px`**: the two scales stack, the reveal grid goes from 5 to 3 columns, the control row tightens (smaller font, the select sized to its content), and button groups center.
 - **Equal-width action buttons only on desktop** (`.moveControls > button { flex: 1 }` above 720px). On mobile they wrap naturally.
 - **Horizontal scroll for an ordered chain.** The five ranking slots stay in one row and scroll sideways (`overflow-x: auto`) on narrow screens instead of wrapping, because wrapping would break the left-to-right "heavier → lighter" reading.
 
 ---
 
-## 9. Visual language
+## 10. Visual language
 
-- **Flat, outlined, high contrast.** 1–2px near-black borders (`--color-black`), white surfaces on the yellow page background, rounded corners from 4px (inputs) to 12px (cards, dialogs).
-- **Only overlays get shadows.** Popovers, dialogs, and hint bubbles have soft shadows. Cards in the page flow use borders only.
+- **Flat, outlined, high contrast.** A white page with 1–2px near-black borders (`--color-black`) on cards and inputs, and gold edges on buttons and selects. Rounded corners range from 4px (inputs) to 12px (cards, dialogs).
+- **Yellow means "here" or "go".** The primary button, the current page in the left menu, and the selected language all use `--color-yellow`.
+- **Side bars are quiet.** White, with a single light-purple divider (`--color-light-purple`) toward the content, and small uppercase grey section headings. They frame the game without competing with it.
+- **Only overlays get shadows.** Popovers, dialogs, hint bubbles, and the open mobile drawer have soft shadows. Cards in the page flow use borders only.
 - **Fixed color tokens per entity.** Each of the five game colors has one class (`.red`, `.yellow`, …) that sets both background and a contrasting text color (yellow gets dark text, the others white). The same class styles inventory blocks, tokens, chips, and reveal cards, so an entity looks the same everywhere.
 - **Color is never the only identifier.** Every colored element also has a one-letter label (R, Y, G, B, P) or the full name. This helps color-blind users and the visual stays readable in grayscale.
 - **Shapes hint at the physical object.** The pan has a rounded bottom only (`border-radius: 0 0 16px 16px`), the base is a CSS border triangle, and the beam is a rounded bar. A few CSS shapes are enough to suggest the object without images.
-- **Focus ring**: `2px solid var(--color-dark-blue)` with a positive offset, used across inputs, buttons, the hint trigger, and the popover panel.
+- **Focus ring**: `2px solid var(--color-dark-blue)`, used across inputs, buttons, the hint trigger, the popover panel, and the menu links. It has a positive offset in the page, and a negative (inset) one in the left menu so it is not clipped by the menu's scroll area.
 - **Disabled is consistent**: lower opacity (0.45–0.6) and `cursor: not-allowed`.
 
 ---
 
-## 10. Accessibility
+## 11. Accessibility
 
 Most of this is already covered above. The practices that apply to any project:
 
 - Every icon-only button has an `aria-label`, and the icon has `aria-hidden`.
 - Toggle-like buttons use `aria-pressed` (pan select, order chips). Buttons that open a dialog use `aria-haspopup="dialog"` plus `aria-expanded`.
+- Landmarks: the left menu is a `<nav>` ("Site menu"), the right bar is an `<aside>` named by its visible heading (`aria-labelledby`), and the page content is `<main>`.
 - `<section aria-label>` groups regions (each scale, inventory, order board, history, reveal).
+- Drawers and popovers manage focus: focus moves in when they open and returns to the button that opened them when they close. Escape closes them.
 - Text that only makes sense visually gets a screen-reader version. A token shows "R" but reads "Red"; a fixed slot gets a hidden "Known middle weight" note. A local `.srOnly` utility handles this.
 - Accessible names include the state a sighted user would see: remaining count, known weight, "cancels".
 - Status regions use `aria-live="polite"`, not `assertive`.
@@ -228,7 +271,7 @@ Most of this is already covered above. The practices that apply to any project:
 
 ---
 
-## 11. Copy and i18n
+## 12. Copy and i18n
 
 - **All copy lives in one typed object per language.** `en.ts` defines the shape (`GameTranslation = typeof en`), and `uk.ts` must satisfy it. `translations` uses `satisfies Record<Language, GameTranslation>`, so a missing key in either language fails type checking.
 - **Strings with values are functions**, not templates with placeholders: `staged: (count, min) => ...`, `placeBlock: (color, weight, count) => ...`. Each language can then reorder words and handle plurals its own way. `uk.ts` includes a Ukrainian plural helper (`блок` / `блоки` / `блоків`).
@@ -237,7 +280,7 @@ Most of this is already covered above. The practices that apply to any project:
 
 ---
 
-## 12. Code conventions that support the UI
+## 13. Code conventions that support the UI
 
 - **Map entities to classes with a typed record**, not an `if` chain. A missing key fails type checking when a new color or outcome is added:
 
@@ -255,4 +298,4 @@ const colorClassNames: Record<Color, string> = {
 className={cx(styles.slot, color && styles.slotFilled, picked && !fixed && styles.slotReady)}
 ```
 
-- **Respect `prefers-reduced-motion` in JS as well as CSS.** CSS transitions are covered by a media query. JS-driven motion (`scrollIntoView`, animations started in code) has to check `window.matchMedia` itself.
+- **Respect `prefers-reduced-motion`.** The button press, the drawer slide, and the backdrop fade are turned off by a `prefers-reduced-motion: reduce` media query. The beam tilt does not have one yet. If you add motion started from JS (`scrollIntoView`, `element.animate`), check `window.matchMedia("(prefers-reduced-motion: reduce)")` there as well, because CSS can't reach it.

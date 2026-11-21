@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { BackButton } from "@/components/BackButton/BackButton";
 import { Button } from "@/components/Button/Button";
 import PageWrapper from "@/components/PageWrapper/PageWrapper";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -229,7 +228,6 @@ const FormulaMaze = () => {
 
   return (
     <PageWrapper fullScreen>
-      <BackButton href="/projects" text={copy.back} />
       <SectionHeader>{copy.title}</SectionHeader>
       <Text className={styles.intro} align="center">
         {copy.intro}

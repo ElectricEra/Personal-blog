@@ -1,18 +1,20 @@
 .button {
   --depth: 4px;
   --pressed-depth: 1px;
+  --edge: var(--color-edge);
+  --lip: var(--color-lip);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 200px;
   padding: 8px 16px;
-  border: 1px solid var(--color-black);
+  border: 1px solid var(--edge);
   border-radius: 6px;
   font: inherit;
   cursor: pointer;
   color: var(--color-black);
-  box-shadow: 0 var(--depth) 0 var(--color-black);
+  box-shadow: 0 var(--depth) 0 var(--lip);
   transform: translateY(0);
   transition:
     transform 70ms ease-out,
@@ -25,7 +27,7 @@
 .button:active:not(:disabled),
 .button[aria-expanded="true"] {
   transform: translateY(calc(var(--depth) - var(--pressed-depth)));
-  box-shadow: 0 var(--pressed-depth) 0 var(--color-black);
+  box-shadow: 0 var(--pressed-depth) 0 var(--lip);
 }
 
 .button:focus-visible {
@@ -46,7 +48,12 @@
   background: var(--color-hover-primary);
 }
 
+.button svg {
+  color: var(--edge);
+}
+
 .secondary {
+  --lip: var(--color-lip-secondary);
   background: white;
 }
 

@@ -1,23 +1,25 @@
 .select {
   --depth: 4px;
   --pressed-depth: 1px;
+  --edge: var(--color-edge);
+  --lip: var(--color-lip-secondary);
 
   appearance: none;
   display: inline-block;
   min-width: 200px;
   padding: 8px 36px 8px 16px;
-  border: 1px solid var(--color-black);
+  border: 1px solid var(--edge);
   border-radius: 6px;
   font: inherit;
   line-height: inherit;
   cursor: pointer;
   color: var(--color-black);
   background-color: white;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 L6 6.5 L11 1.5' stroke='%230c1421' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 L6 6.5 L11 1.5' stroke='%238f6b16' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 12px 8px;
-  box-shadow: 0 var(--depth) 0 var(--color-black);
+  box-shadow: 0 var(--depth) 0 var(--lip);
   transform: translateY(0);
   transition:
     transform 70ms ease-out,
@@ -32,13 +34,13 @@
 
 .select:active:not(:disabled) {
   transform: translateY(calc(var(--depth) - var(--pressed-depth)));
-  box-shadow: 0 var(--pressed-depth) 0 var(--color-black);
+  box-shadow: 0 var(--pressed-depth) 0 var(--lip);
 }
 
 @supports selector(:open) {
   .select:open:not(:disabled) {
     transform: translateY(calc(var(--depth) - var(--pressed-depth)));
-    box-shadow: 0 var(--pressed-depth) 0 var(--color-black);
+    box-shadow: 0 var(--pressed-depth) 0 var(--lip);
   }
 }
 

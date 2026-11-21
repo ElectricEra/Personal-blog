@@ -1,0 +1,49 @@
+.deck {
+  --layer-offset: 2px;
+
+  position: relative;
+  flex: none;
+  width: var(--card-width, 120px);
+  aspect-ratio: 5 / 7;
+  margin: calc(var(--layers) * var(--layer-offset)) 0 0
+    calc(var(--layers) * var(--layer-offset));
+  padding: 0;
+  border: none;
+  border-radius: 5% / 3.57%;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  transform: translate(
+    calc(var(--layer) * var(--layer-offset) * -1),
+    calc(var(--layer) * var(--layer-offset) * -1)
+  );
+}
+
+.deck:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+.deck:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.deck:focus-visible {
+  outline: 3px solid var(--color-yellow, #edcf39);
+  outline-offset: 6px;
+}
+
+.empty {
+  border: 2px dashed rgb(0 0 0 / 25%);
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck {
+    transition: none;
+  }
+}

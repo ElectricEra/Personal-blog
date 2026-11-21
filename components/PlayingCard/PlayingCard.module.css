@@ -1,0 +1,198 @@
+/*
+ * Sized by --card-width on any ancestor. Proportions follow a 2.5" × 3.5"
+ * poker card, and everything inside scales with cqw (1cqw = 1% of the width).
+ */
+.card {
+  --card-red: #c8102e;
+  --card-black: #16181d;
+  --card-back-color: var(--color-dark-blue, #3052a0);
+
+  position: relative;
+  flex: none;
+  width: var(--card-width, 120px);
+  aspect-ratio: 5 / 7;
+  container-type: inline-size;
+  border-radius: 5% / 3.57%;
+  perspective: 900px;
+  user-select: none;
+}
+
+.red {
+  color: var(--card-red);
+}
+
+.black {
+  color: var(--card-black);
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.faceDown .inner {
+  transform: rotateY(180deg);
+}
+
+.side {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  backface-visibility: hidden;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 12%),
+    0 1px 2px rgb(0 0 0 / 18%),
+    0 4px 10px rgb(0 0 0 / 10%);
+}
+
+.front {
+  background: #fffdf8;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.back {
+  transform: rotateY(180deg);
+  border: 4.5cqw solid #fffdf8;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 2.6cqw,
+      rgb(255 255 255 / 22%) 2.6cqw 3.4cqw
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 2.6cqw,
+      rgb(255 255 255 / 22%) 2.6cqw 3.4cqw
+    ),
+    var(--card-back-color);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 12%),
+    0 1px 2px rgb(0 0 0 / 18%),
+    0 4px 10px rgb(0 0 0 / 10%),
+    inset 0 0 0 1.2cqw var(--card-back-color),
+    inset 0 0 0 1.8cqw #fffdf8;
+}
+
+.corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 13cqw;
+  line-height: 1;
+}
+
+.cornerTop {
+  top: 4cqw;
+  left: 2cqw;
+}
+
+.cornerBottom {
+  right: 2cqw;
+  bottom: 4cqw;
+  transform: rotate(180deg);
+}
+
+.cornerRank {
+  font-size: 14cqw;
+  font-weight: 700;
+  letter-spacing: -0.1em;
+}
+
+.cornerSuit,
+.pip,
+.ace,
+.faceSuit,
+.faceFigure {
+  font-family: "Segoe UI Symbol", "DejaVu Sans", "Arial Unicode MS", sans-serif;
+  line-height: 1;
+}
+
+.cornerSuit {
+  margin-top: 0.5cqw;
+  font-size: 11cqw;
+}
+
+.pips {
+  position: absolute;
+  inset: 15% 29%;
+}
+
+.pip {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  font-size: 20cqw;
+  transform: translate(-50%, -50%);
+}
+
+.pip.flipped {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.ace {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 42cqw;
+  transform: translate(-50%, -50%);
+}
+
+.aceSpades {
+  font-size: 64cqw;
+}
+
+.face {
+  position: absolute;
+  inset: 11% 18%;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  border: 0.8cqw solid currentColor;
+  border-radius: 1.5cqw;
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 0.4cqw),
+      currentColor calc(50% - 0.4cqw) calc(50% + 0.4cqw),
+      transparent calc(50% + 0.4cqw)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(237 207 57 / 22%) 0 1.5cqw,
+      transparent 1.5cqw 3cqw
+    ),
+    #fffaf0;
+  box-shadow: inset 0 0 0 1.6cqw #fffaf0;
+}
+
+.faceHalf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+}
+
+.faceBottom {
+  transform: rotate(180deg);
+}
+
+.faceFigure {
+  font-size: 34cqw;
+  filter: drop-shadow(0.8cqw 0.8cqw 0 rgb(237 207 57 / 85%));
+}
+
+.faceSuit {
+  font-size: 10cqw;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    transition: none;
+  }
+}
