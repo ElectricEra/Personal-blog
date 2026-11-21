@@ -1,7 +1,7 @@
 import type { GameTranslation } from "./en";
 
 export const uk: GameTranslation = {
-  title: "Формульний лабіринт",
+  title: "Шлях пам’яті",
   intro:
     "Запам’ятайте 16 чисел. Потім проведіть шлях літерами так, щоб їхні числа дали цільову суму.",
   memorizeLabel: "Запам’ятовувати",
@@ -58,8 +58,6 @@ export const uk: GameTranslation = {
   clearPath: "Очистити шлях",
   hide: "Сховати",
   reveal: "Відкрити",
-  hideNumbers: "Сховати числа",
-  showNumbers: "Відкрити числа",
   revealPrompt: "Відкрити числа? Їх можна знову сховати.",
   revealYes: "Відкрити числа",
   revealNo: "Грати далі",

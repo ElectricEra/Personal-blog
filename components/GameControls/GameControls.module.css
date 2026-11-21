@@ -1,0 +1,81 @@
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.row > select,
+.row > button,
+.anchor > button {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.anchor {
+  display: flex;
+  min-width: 0;
+}
+
+.row .iconButton {
+  width: 42px;
+  min-width: 42px;
+  height: 100%;
+  padding: 8px;
+}
+
+.prompt {
+  line-height: 1.4;
+}
+
+.settingsText {
+  display: none;
+}
+
+/* Inside the desktop RightBar the controls stack in one column. */
+@media screen and (min-width: 1100px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .row .iconButton {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .settingsText {
+    display: inline;
+  }
+
+  .confirmPanel {
+    width: 100%;
+  }
+
+  .confirmPanel > button {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .row > select {
+    width: auto;
+    min-width: min-content;
+    padding-left: 8px;
+    font-size: 14px;
+  }
+
+  .row > button,
+  .anchor > button {
+    padding: 8px 4px;
+    font-size: 13px;
+    line-height: 1.15;
+    overflow: hidden;
+  }
+}

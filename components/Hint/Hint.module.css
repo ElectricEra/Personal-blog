@@ -1,0 +1,8 @@
+.hint {
+  color: var(--color-dark-grey-blue);
+  line-height: 1.5;
+}
+
+.center {
+  text-align: center;
+}

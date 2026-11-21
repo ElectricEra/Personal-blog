@@ -1,0 +1,17 @@
+.feedback {
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Keeps a display value set by a parent from showing the empty line. */
+.feedback[hidden] {
+  display: none;
+}
+
+.good {
+  color: var(--color-success);
+}
+
+.bad {
+  color: var(--color-error);
+}

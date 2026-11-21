@@ -1,0 +1,7 @@
+.good {
+  color: var(--color-success);
+}
+
+.bad {
+  color: var(--color-error);
+}

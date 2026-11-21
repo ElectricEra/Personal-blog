@@ -1,0 +1,22 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.button {
+  cursor: pointer;
+}
+
+.selected {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
