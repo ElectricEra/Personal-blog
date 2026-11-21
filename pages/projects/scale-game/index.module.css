@@ -145,6 +145,7 @@
 .information {
   margin: 0;
   font-size: 1.2rem;
+  scroll-margin-top: 16px;
 }
 
 .separator {
@@ -672,6 +673,12 @@ button.orderChip {
 @media (min-width: 721px) {
   .moveControls > button {
     flex: 1;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .information {
+    scroll-margin-top: 72px;
   }
 }
 
