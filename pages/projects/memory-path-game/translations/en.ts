@@ -1,5 +1,5 @@
 export const en = {
-  title: "Formula Maze",
+  title: "Memory Path",
   intro:
     "Memorize 16 numbers. Then draw a path across the letter board to hit the target sum.",
   memorizeLabel: "Memorize for",
@@ -56,8 +56,6 @@ export const en = {
   clearPath: "Clear path",
   hide: "Hide",
   reveal: "Reveal",
-  hideNumbers: "Hide numbers",
-  showNumbers: "Reveal numbers",
   revealPrompt: "Reveal the numbers? You can hide them again.",
   revealYes: "Reveal numbers",
   revealNo: "Keep playing",

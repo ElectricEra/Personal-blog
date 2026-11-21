@@ -4,10 +4,14 @@ This document looks at `pages/projects/scale-game` from a design and interaction
 
 Files covered:
 
-- `pages/projects/scale-game/index.page.tsx` — page layout and interaction wiring
-- `pages/projects/scale-game/index.module.css` — page styles
+- `pages/projects/scale-game/index.page.tsx` — page layout
+- `pages/projects/scale-game/useScaleGame.ts`, `useOrderBoard.ts` — interaction wiring
+- `pages/projects/scale-game/components/*` — the scale cards, inventory, order board, guess dialog, and their styles
 - `pages/projects/scale-game/translations/*` — copy
-- Shared components: `RightBar`, `PhysicalButton`, `Popover`, `Modal`, `Collapsible`, `Select`, `PageWrapper`, `SectionHeader`, `Stack`, `Text`
+- Shared game components: `GameHeader`, `GameControls` (with `ConfirmPopover` and `SettingsButton`), `GameRules`, `ZoneHeading`, `ButtonRow`, `FeedbackLine`, `Hint`, `Pill`, `HistoryList`, `SettingsModal`, `VisuallyHidden`
+- Base components: `RightBar`, `PhysicalButton`, `Popover`, `Modal`, `Collapsible`, `Select`, `PageWrapper`, `SectionHeader`, `Stack`, `Text`
+
+How the code is organized is covered in [coding-principles.md](coding-principles.md).
 - Site shell (shared by every page): `SideMenu` and the layout in `pages/_app.page.tsx` / `pages/app.module.css`
 
 ---
@@ -79,8 +83,8 @@ Patterns to reuse:
 .content:has([data-right-bar]) { margin-right: var(--right-bar-width); }
 ```
 
-- **The page decides how its controls stack.** The bar only positions itself. The Scale game adds a `min-width: 1100px` rule that turns the control row into one column, shows a "Settings" label next to the gear, and fits the Resign popover to the bar's width so it cannot run off the screen edge.
-- **The breakpoint is repeated** in `RightBar.module.css`, `app.module.css`, and the page's own CSS. Change all three together.
+- **The controls decide how they stack.** The bar only positions itself. `GameControls` adds a `min-width: 1100px` rule that turns the control row into one column, shows a "Settings" label next to the gear, and fits the Resign popover to the bar's width so it cannot run off the screen edge.
+- **The breakpoint is repeated** in `RightBar.module.css`, `app.module.css`, and `GameControls.module.css`. Change all three together.
 
 ---
 
@@ -135,7 +139,7 @@ Feedback is spread across a few places, each with its own job:
 
 Details worth copying:
 
-- **One feedback line, cleared on the next action.** `Feedback = { text, good }` is set by actions and reset to `null` by the next one. The line uses `aria-live="polite"` and the `hidden` attribute, with an explicit `.feedback[hidden] { display: none; }` so a `display` set elsewhere cannot override it.
+- **One feedback line, cleared on the next action.** `Feedback = { text, good }` is set by actions and reset to `null` by the next one. `FeedbackLine` renders it with `aria-live="polite"` and the `hidden` attribute, with an explicit `.feedback[hidden] { display: none; }` so a `display` set elsewhere cannot override it.
 - **Color carries meaning, but text carries it too.** Good is green, bad is red, and the message text is enough on its own.
 - **Reserve space for status text.** `.outcome { min-height: 1.4em; }` keeps the layout from jumping when the text appears or changes length.
 - **Animate state changes lightly.** The beam is a `div` rotated by ±8deg with `transition: transform 0.3s ease`. It is cheap, readable, and gives a physical feel without any animation library.
@@ -223,7 +227,7 @@ Don't use a CSS-only `:hover` / `:focus-within` tooltip for content that matters
 
 ## 9. Responsive layout
 
-- **Grid with `minmax(0, 1fr)`** everywhere (`.controlRow`, `.scales`, `.pans`, `.answers`) so long labels shrink and wrap instead of overflowing.
+- **Grid with `minmax(0, 1fr)`** everywhere (the `GameControls` row, `.scales`, `.pans`, `.answers`) so long labels shrink and wrap instead of overflowing.
 - **Breakpoints:**
 
 | Width | What changes |
@@ -235,8 +239,8 @@ Don't use a CSS-only `:hover` / `:focus-within` tooltip for content that matters
 
 - **A stable control row.** Because Resign is always rendered (disabled outside a game), the row always has the same columns: three equal text columns and one for the icon button (`repeat(3, minmax(0, 1fr)) auto`). The row does not reflow when a game starts.
 - **The icon-only button gets a fixed square column** (`auto`, `42px` wide). The text buttons share the remaining space equally.
-- **Wrapper elements must pass size through.** The popover root (`.stretchAnchor`) is made `display: flex; min-width: 0` so the button inside can fill its grid cell like its siblings.
-- **Equal-width action buttons only on desktop** (`.moveControls > button { flex: 1 }` above 720px). On mobile they wrap naturally.
+- **Wrapper elements must pass size through.** The popover root (`.anchor` in `ConfirmPopover`) is made `display: flex; min-width: 0` so the button inside can fill its grid cell like its siblings.
+- **Equal-width action buttons only on desktop** (`<ButtonRow layout="stretch">` gives each button `flex: 1` above 720px). On mobile they wrap naturally.
 - **Horizontal scroll for an ordered chain.** The five ranking slots stay in one row and scroll sideways (`overflow-x: auto`) on narrow screens instead of wrapping, because wrapping would break the left-to-right "heavier → lighter" reading.
 
 ---
@@ -264,7 +268,7 @@ Most of this is already covered above. The practices that apply to any project:
 - Landmarks: the left menu is a `<nav>` ("Site menu"), the right bar is an `<aside>` named by its visible heading (`aria-labelledby`), and the page content is `<main>`.
 - `<section aria-label>` groups regions (each scale, inventory, order board, history, reveal).
 - Drawers and popovers manage focus: focus moves in when they open and returns to the button that opened them when they close. Escape closes them.
-- Text that only makes sense visually gets a screen-reader version. A token shows "R" but reads "Red"; a fixed slot gets a hidden "Known middle weight" note. A local `.srOnly` utility handles this.
+- Text that only makes sense visually gets a screen-reader version. A token shows "R" but reads "Red"; a fixed slot gets a hidden "Known middle weight" note. The shared `VisuallyHidden` component handles this.
 - Accessible names include the state a sighted user would see: remaining count, known weight, "cancels".
 - Status regions use `aria-live="polite"`, not `assertive`.
 - Text inputs have `autoComplete="off"` because browser autofill suggestions would be noise here.

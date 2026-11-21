@@ -1,0 +1,20 @@
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 1.2em;
+  line-height: 1.45;
+}
+
+.starting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-black);
+}
+
+.startingTitle {
+  font-size: 1.05rem;
+}

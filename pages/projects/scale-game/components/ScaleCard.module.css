@@ -1,0 +1,174 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-black);
+  border-radius: 12px;
+  background: white;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title {
+  font-size: 1.2rem;
+}
+
+.hintButton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-dark-blue);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hintButton:focus-visible {
+  border-radius: 99px;
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: 2px;
+}
+
+/* Two-class selector so it outranks the Popover panel's centered layout. */
+.hintAnchor .hintBubble {
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  max-width: min(280px, 70vw);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: 0 4px 12px rgb(12 20 33 / 12%);
+  transform: none;
+}
+
+.outcome {
+  min-height: 1.4em;
+  font-weight: 700;
+  text-align: center;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.beam {
+  width: 86%;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--color-dark-blue);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.tiltLeft {
+  transform: rotate(-8deg);
+}
+
+.tiltRight {
+  transform: rotate(8deg);
+}
+
+.tiltLevel {
+  transform: rotate(0deg);
+}
+
+.base {
+  width: 0;
+  height: 0;
+  margin-top: 2px;
+  border-right: 12px solid transparent;
+  border-bottom: 16px solid var(--color-black);
+  border-left: 12px solid transparent;
+}
+
+.pans {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.panColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sideButton {
+  padding: 6px 8px;
+  border: 1px solid var(--color-black);
+  border-radius: 6px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sideButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sideSelected {
+  background: var(--color-light-blue);
+  border-color: var(--color-dark-blue);
+}
+
+.pan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: flex-start;
+  min-height: 92px;
+  padding: 8px;
+  border: 2px solid var(--color-black);
+  border-radius: 0 0 16px 16px;
+  background: var(--color-light-pink);
+}
+
+.panSelected {
+  border-color: var(--color-dark-blue);
+  box-shadow: inset 0 0 0 2px var(--color-light-blue);
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pendingToken {
+  border-style: dashed;
+  border-color: var(--color-black);
+  cursor: pointer;
+}
+
+.pendingToken:disabled {
+  cursor: not-allowed;
+}
+
+.ghostToken {
+  opacity: 0.28;
+}

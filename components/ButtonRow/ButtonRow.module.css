@@ -1,0 +1,26 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.center {
+  justify-content: center;
+}
+
+.center > button {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 721px) {
+  .stretch > button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .row {
+    justify-content: center;
+  }
+}
