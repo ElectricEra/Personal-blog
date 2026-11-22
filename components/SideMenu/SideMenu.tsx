@@ -20,6 +20,7 @@ const SECTIONS: Array<{
       { href: "/projects/sudoku", id: "sudoku" },
       { href: "/projects/memory-path-game", id: "memoryPath" },
       { href: "/projects/scale-game", id: "scale" },
+      { href: "/projects/hidden-code-game", id: "hiddenCode" },
     ],
   },
   {

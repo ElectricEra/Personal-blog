@@ -1,0 +1,69 @@
+.game {
+  width: 100%;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+}
+
+.counterBar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.counterBar .barButton {
+  flex: 1;
+  min-width: 0;
+}
+
+.editRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.editRow > div {
+  display: flex;
+  min-width: 0;
+}
+
+.editRow button.editButton {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subheading {
+  font-size: 1.2rem;
+}
+
+.summary {
+  scroll-margin-top: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  .summary {
+    scroll-margin-top: 72px;
+  }
+}

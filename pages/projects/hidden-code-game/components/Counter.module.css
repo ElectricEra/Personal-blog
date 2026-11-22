@@ -1,0 +1,41 @@
+.counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  max-width: 116px;
+  padding: 4px 10px;
+  border: 2px solid var(--color-black);
+  border-radius: 8px;
+  background: white;
+  line-height: 1;
+  text-align: center;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.value {
+  margin-top: 3px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.max {
+  margin-left: 1px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.spent {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}

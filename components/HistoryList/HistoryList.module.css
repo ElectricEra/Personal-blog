@@ -17,6 +17,12 @@
   list-style: none;
 }
 
+.grid {
+  flex-direction: row;
+  flex-wrap: wrap;
+  max-height: 340px;
+}
+
 .item {
   display: flex;
   flex-direction: column;

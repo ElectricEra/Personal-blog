@@ -1,0 +1,125 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 1rem;
+}
+
+.star {
+  position: relative;
+  --die-size: clamp(16px, 6.4cqi, 24px);
+  width: min(100%, 380px);
+  aspect-ratio: 1;
+  container-type: inline-size;
+}
+
+.outline {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--color-black);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--color-black);
+  border-radius: 50%;
+  background: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+}
+
+.point {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: max-content;
+  min-width: 84px;
+  padding: 4px;
+  border: 2px solid var(--color-black);
+  border-radius: 10px;
+  background: white;
+  transform: translate(-50%, -50%);
+}
+
+.empty {
+  border-style: dashed;
+}
+
+.selected {
+  background: var(--color-yellow);
+}
+
+.pointButton,
+.pointName {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.pointButton {
+  cursor: pointer;
+}
+
+.pointButton:focus-visible,
+.die:focus-visible {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: 1px;
+}
+
+.value {
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.digits {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.die {
+  flex: 0 0 var(--die-size);
+  height: var(--die-size);
+  padding: 0;
+  border: 2px solid var(--color-black);
+  border-radius: 6px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.die:disabled {
+  cursor: not-allowed;
+}
