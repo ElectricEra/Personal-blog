@@ -11,6 +11,7 @@ export const en = {
     sudoku: "Sudoku",
     memoryPath: "Memory Path",
     scale: "Scale Game",
+    hiddenCode: "Hidden Code",
     playingCards: "Playing Cards",
   },
 };

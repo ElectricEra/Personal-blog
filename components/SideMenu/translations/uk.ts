@@ -13,6 +13,7 @@ export const uk: SideMenuTranslation = {
     sudoku: "Судоку",
     memoryPath: "Шлях пам’яті",
     scale: "Гра з терезами",
+    hiddenCode: "Прихований код",
     playingCards: "Гральні карти",
   },
 };

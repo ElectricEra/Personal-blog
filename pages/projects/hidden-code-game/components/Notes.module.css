@@ -1,0 +1,22 @@
+.label {
+  font-weight: 700;
+}
+
+.notes {
+  width: 100%;
+  min-height: 120px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-black);
+  border-radius: 4px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.notes:focus {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: 1px;
+}
