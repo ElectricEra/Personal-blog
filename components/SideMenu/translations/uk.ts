@@ -14,6 +14,7 @@ export const uk: SideMenuTranslation = {
     memoryPath: "Шлях пам’яті",
     scale: "Гра з терезами",
     hiddenCode: "Прихований код",
+    wallGo: "Wall Go",
     playingCards: "Гральні карти",
   },
 };

@@ -1,0 +1,118 @@
+.row {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin-inline: auto;
+}
+
+.scores {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 2px solid var(--color-black);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.scoreRed .tag {
+  background: var(--color-error);
+}
+
+.scoreBlue .tag {
+  background: var(--color-dark-blue);
+}
+
+.count {
+  color: var(--color-black);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  --status-border: 2px;
+  --status-pad-block: 8px;
+  --action-border: 2px;
+  --action-pad-block: 6px;
+  --action-font-size: 0.95rem;
+  --action-line-height: 1.2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  width: 100%;
+  margin: 0;
+  padding: var(--status-pad-block) 12px;
+  border: var(--status-border) solid var(--color-black);
+  border-radius: 12px;
+  background: var(--color-yellow);
+  color: var(--color-black);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: left;
+  min-height: calc(
+    var(--status-border) * 2 + var(--status-pad-block) * 2 +
+      var(--action-border) * 2 + var(--action-pad-block) * 2 +
+      var(--action-font-size) * var(--action-line-height)
+  );
+}
+
+.message {
+  min-width: 0;
+  text-align: left;
+}
+
+.withAction {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+}
+
+.action {
+  justify-self: end;
+  padding: var(--action-pad-block) 12px;
+  border: var(--action-border) solid var(--color-black);
+  border-radius: 8px;
+  background: white;
+  color: var(--color-black);
+  font: inherit;
+  font-size: var(--action-font-size);
+  font-weight: 800;
+  line-height: var(--action-line-height);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--color-hover);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: 2px;
+}
+
+.red {
+  border-left: 8px solid var(--color-error);
+}
+
+.blue {
+  border-right: 8px solid var(--color-dark-blue);
+}

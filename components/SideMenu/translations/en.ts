@@ -12,6 +12,7 @@ export const en = {
     memoryPath: "Memory Path",
     scale: "Scale Game",
     hiddenCode: "Hidden Code",
+    wallGo: "Wall Go",
     playingCards: "Playing Cards",
   },
 };

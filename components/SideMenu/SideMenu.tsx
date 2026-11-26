@@ -21,6 +21,7 @@ const SECTIONS: Array<{
       { href: "/projects/memory-path-game", id: "memoryPath" },
       { href: "/projects/scale-game", id: "scale" },
       { href: "/projects/hidden-code-game", id: "hiddenCode" },
+      { href: "/projects/wall-go-game", id: "wallGo" },
     ],
   },
   {

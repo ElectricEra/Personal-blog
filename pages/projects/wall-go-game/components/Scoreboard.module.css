@@ -1,0 +1,8 @@
+.largest {
+  font-variant-numeric: tabular-nums;
+}
+
+.board {
+  display: grid;
+  gap: 6px;
+}

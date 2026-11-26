@@ -1,0 +1,137 @@
+.board {
+  --wall: 14px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr) var(--wall)) minmax(0, 1fr);
+  grid-template-rows: repeat(6, minmax(0, 1fr) var(--wall)) minmax(0, 1fr);
+  width: min(100%, 560px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border: 2px solid var(--color-black);
+  border-radius: 12px;
+  background: var(--color-light-pink);
+  overflow: hidden;
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  background: white;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.cellButton {
+  cursor: pointer;
+  border: 0;
+}
+
+.cellButton:focus-visible,
+.wallButton:focus-visible {
+  outline: 2px solid var(--color-dark-blue);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.destination {
+  background: var(--color-hover);
+}
+
+.selected {
+  box-shadow: inset 0 0 0 3px var(--color-yellow);
+}
+
+.chosen {
+  box-shadow: inset 0 0 0 3px var(--color-dark-blue);
+}
+
+.last {
+  outline: 2px solid var(--color-edge);
+  outline-offset: -2px;
+}
+
+.ownerRed {
+  background: color-mix(in srgb, var(--color-error) 22%, white);
+}
+
+.ownerBlue {
+  background: color-mix(in srgb, var(--color-dark-blue) 18%, white);
+}
+
+.ownerNeutral {
+  background: var(--color-light-purple);
+}
+
+.ownerTrapped {
+  background: color-mix(in srgb, var(--color-yellow) 50%, white);
+}
+
+.ownerContested {
+  background: white;
+}
+
+.piece {
+  width: min(72%, 46px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: white;
+  pointer-events: none;
+}
+
+.red {
+  background: var(--color-error);
+}
+
+.blue {
+  background: var(--color-dark-blue);
+}
+
+.red.ghost,
+.blue.ghost {
+  background: color-mix(in srgb, currentColor 18%, white);
+  outline: 2px dashed currentColor;
+}
+
+.red.ghost {
+  color: var(--color-error);
+}
+
+.blue.ghost {
+  color: var(--color-dark-blue);
+}
+
+.pending {
+  outline: 2px dashed var(--color-black);
+}
+
+.wall {
+  min-width: 0;
+  min-height: 0;
+  background: var(--color-black);
+}
+
+.wallButton {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-dark-blue) 45%, white);
+}
+
+.wallButton:hover {
+  background: var(--color-dark-blue);
+}
+
+.wallNew {
+  background: var(--color-edge);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallButton {
+    transition: none;
+  }
+}
