@@ -1,0 +1,13 @@
+.game {
+  width: 100%;
+}
+
+.setup {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.stage {
+  position: relative;
+}
